@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+//option go_package = "github.com/tidusant/c3m-grpc-protoc/protoc";
+package proto;
+
+// The application's services definition.
+// We will use these services as common define for all grpc in app.
+service GRPCServices {
+  rpc Call(RPCRequest) returns (RPCResponse) {};  
+}
+
+
+//response type of all rpc response
+message RPCResponse  {
+	string RPCName =1;
+	string Version =2;
+	string Data =3;
+}
+
+//request type of all rpc response
+message RPCRequest  {
+	string AppName=1;
+	string Version=2;
+    string Session=3;
+    string UserID=4;
+    string UserIP=5;
+    string Action=6;
+    string Params=7;
+    string ShopID=8;
+}
