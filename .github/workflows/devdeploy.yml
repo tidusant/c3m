@@ -38,7 +38,7 @@ jobs:
             echo "the last commit log contains \"$COMMIT_FILTER\", start building"            
             echo "::set-output name=isdeploy::true"
             echo "::set-output name=apppath::$result2"
-            echo "::set-output name=appname::$(echo ${result2//\//\-})"
+            echo "::set-output name=appname::${result2//\//\-}"
             ${SLACK_COMMAND} '{"text":"Start deploy ${DEPLOY_NAME} !"}' ${{secrets.SLACK_WEBHOOK_URL}}
           else            
             echo "not a DEPLOY command"
