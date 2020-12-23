@@ -4,13 +4,13 @@
 - create go.mod file
 - update latest dependency:
     go clean --modcache
-    go get github.com/tidusant/c3m-common/c3mcommon@master
-    go get github.com/tidusant/c3m-common/log@master
-    go get github.com/tidusant/c3m-common/mycrypto@master
-    go get github.com/tidusant/c3m-common/mystring@master
-    go get github.com/tidusant/chadmin-repo/models@master
-    go get github.com/tidusant/chadmin-repo/session@master
-    go get github.com/tidusant/chadmin-repo/cuahang@master
+    go get github.com/tidusant/c3m/common/c3mcommon@master
+    go get github.com/tidusant/c3m/common/log@master
+    go get github.com/tidusant/c3m/common/mycrypto@master
+    go get github.com/tidusant/c3m/common/mystring@master
+    go get github.com/tidusant/c3m/repo/models@master
+    go get github.com/tidusant/c3m/repo/session@master
+    go get github.com/tidusant/c3m/repo/cuahang@master
     
     go get github.com/tidusant/c3m-grpc-protoc/protoc
 - compile code:

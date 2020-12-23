@@ -4,14 +4,14 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
-	"github.com/tidusant/c3m-common/log"
+	"github.com/tidusant/c3m/common/log"
 	"math"
 	"math/rand"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/tidusant/c3m-common/mystring"
+	"github.com/tidusant/c3m/common/mystring"
 )
 
 func StringRand(strlen int) string {

@@ -8,11 +8,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/tidusant/c3m-common/log"
+	"github.com/tidusant/c3m/common/log"
 
-	pb "github.com/tidusant/c3m-grpc-protoc/protoc"
-	rpch "github.com/tidusant/chadmin-repo/cuahang"
-	"github.com/tidusant/chadmin-repo/models"
+	pb "github.com/tidusant/c3m/grpc/protoc"
+	rpch "github.com/tidusant/c3m/repo/cuahang"
+	"github.com/tidusant/c3m/repo/models"
 
 	"context"
 	"google.golang.org/grpc"

@@ -2,10 +2,10 @@ package main
 
 import (
 	"bytes"
-	"github.com/tidusant/c3m-common/c3mcommon"
-	"github.com/tidusant/c3m-common/mycrypto"
+	"github.com/tidusant/c3m/common/c3mcommon"
+	"github.com/tidusant/c3m/common/mycrypto"
 
-	"github.com/tidusant/chadmin-repo/models"
+	"github.com/tidusant/c3m/repo/models"
 
 	"encoding/json"
 	"errors"

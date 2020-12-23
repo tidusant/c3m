@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/tidusant/c3m-common/c3mcommon"
+	"github.com/tidusant/c3m/common/c3mcommon"
 
 	pb "github.com/tidusant/c3m-grpc-protoc/protoc"
-	"github.com/tidusant/chadmin-repo/models"
+	"github.com/tidusant/c3m/repo/models"
 
 	"encoding/json"
 	"strings"

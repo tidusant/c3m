@@ -1,10 +1,10 @@
 package cuahang
 
 import (
-	"github.com/tidusant/c3m-common/c3mcommon"
-	"github.com/tidusant/c3m-common/log"
-	"github.com/tidusant/c3m-common/mystring"
-	"github.com/tidusant/chadmin-repo/models"
+	"github.com/tidusant/c3m/common/c3mcommon"
+	"github.com/tidusant/c3m/common/log"
+	"github.com/tidusant/c3m/common/mystring"
+	"github.com/tidusant/c3m/repo/models"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"

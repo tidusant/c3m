@@ -4,19 +4,19 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/tidusant/c3m-common/c3mcommon"
-	"github.com/tidusant/c3m-common/mycrypto"
-	"github.com/tidusant/c3m-common/mystring"
+	"github.com/tidusant/c3m/common/c3mcommon"
+	"github.com/tidusant/c3m/common/mycrypto"
+	"github.com/tidusant/c3m/common/mystring"
 	"google.golang.org/grpc"
 	"os"
 	"time"
 
-	"github.com/tidusant/c3m-common/log"
+	"github.com/tidusant/c3m/common/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	pb "github.com/tidusant/c3m-grpc-protoc/protoc"
-	rpch "github.com/tidusant/chadmin-repo/cuahang"
-	"github.com/tidusant/chadmin-repo/models"
+	pb "github.com/tidusant/c3m/grpc/protoc"
+	rpch "github.com/tidusant/c3m/repo/cuahang"
+	"github.com/tidusant/c3m/repo/models"
 
 	"encoding/base64"
 	"encoding/json"

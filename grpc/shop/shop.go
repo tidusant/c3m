@@ -1,14 +1,14 @@
 package main
 
 import (
-	"github.com/tidusant/c3m-common/c3mcommon"
-	"github.com/tidusant/c3m-common/log"
+	"github.com/tidusant/c3m/common/c3mcommon"
+	"github.com/tidusant/c3m/common/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"strconv"
 
-	pb "github.com/tidusant/c3m-grpc-protoc/protoc"
-	rpch "github.com/tidusant/chadmin-repo/cuahang"
-	"github.com/tidusant/chadmin-repo/models"
+	pb "github.com/tidusant/c3m/grpc/protoc"
+	rpch "github.com/tidusant/c3m/repo/cuahang"
+	"github.com/tidusant/c3m/repo/models"
 
 	"encoding/json"
 	"fmt"

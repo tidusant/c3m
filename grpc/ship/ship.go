@@ -3,10 +3,10 @@ package main
 import (
 	"encoding/json"
 
-	"github.com/tidusant/c3m-common/c3mcommon"
-	"github.com/tidusant/c3m-common/log"
-	rpch "github.com/tidusant/chadmin-repo/cuahang"
-	"github.com/tidusant/chadmin-repo/models"
+	"github.com/tidusant/c3m/common/c3mcommon"
+	"github.com/tidusant/c3m/common/log"
+	rpch "github.com/tidusant/c3m/repo/cuahang"
+	"github.com/tidusant/c3m/repo/models"
 	//repush
 	"flag"
 	"fmt"

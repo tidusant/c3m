@@ -3,8 +3,8 @@ package main
 import (
 	"encoding/json"
 	pb "github.com/tidusant/c3m-grpc-protoc/protoc"
-	rpch "github.com/tidusant/chadmin-repo/cuahang"
-	"github.com/tidusant/chadmin-repo/models"
+	rpch "github.com/tidusant/c3m/repo/cuahang"
+	"github.com/tidusant/c3m/repo/models"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"fmt"

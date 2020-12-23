@@ -3,8 +3,8 @@ package vrsgim
 import (
 	"os"
 
-	"github.com/tidusant/c3m-common/c3mcommon"
-	"github.com/tidusant/c3m-common/log"
+	"github.com/tidusant/c3m/common/c3mcommon"
+	"github.com/tidusant/c3m/common/log"
 
 	"gopkg.in/mgo.v2"
 )

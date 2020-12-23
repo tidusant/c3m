@@ -1,9 +1,9 @@
 package cuahang
 
 import (
-	"github.com/tidusant/c3m-common/c3mcommon"
+	"github.com/tidusant/c3m/common/c3mcommon"
 
-	"github.com/tidusant/chadmin-repo/models"
+	"github.com/tidusant/c3m/repo/models"
 	//	"c3m/log"
 
 	//"strings"

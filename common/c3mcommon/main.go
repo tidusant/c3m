@@ -31,9 +31,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tidusant/c3m-common/log"
-	"github.com/tidusant/c3m-common/mycrypto"
-	"github.com/tidusant/c3m-common/mystring"
+	"github.com/tidusant/c3m/common/log"
+	"github.com/tidusant/c3m/common/mycrypto"
+	"github.com/tidusant/c3m/common/mystring"
 
 	"github.com/nfnt/resize"
 	"github.com/spf13/viper"
