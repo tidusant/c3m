@@ -27,9 +27,15 @@ spec:
             - containerPort: 8081 #Exposes the port 8901 of the container
           env:
             - name: SESSION_URI
-              value: "mongodb://sellpos:sellpos1234%40@mongo/sellpos?retryWrites=true&w=majority"
+              valueFrom:
+                secretKeyRef:
+                  name: mysecret
+                  key: devdb_url
             - name: SESSION_DB
-              value: "sellpos_dev"
+              valueFrom:
+                secretKeyRef:
+                  name: mysecret
+                  key: devdb_name
             - name: AUTH_IP
               value: "c3m-grpc-auth-service:8901"
             - name: SHOP_IP
