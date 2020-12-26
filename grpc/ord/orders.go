@@ -7,6 +7,7 @@ import (
 	"github.com/tidusant/c3m/common/c3mcommon"
 	"github.com/tidusant/c3m/common/mycrypto"
 	"github.com/tidusant/c3m/common/mystring"
+	maingrpc "github.com/tidusant/c3m/grpc"
 	"google.golang.org/grpc"
 	"os"
 	"time"
@@ -15,7 +16,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	pb "github.com/tidusant/c3m/grpc/protoc"
-	rpch "github.com/tidusant/c3m/repo/cuahang"
+	"github.com/tidusant/c3m/repo/cuahang"
 	"github.com/tidusant/c3m/repo/models"
 
 	"encoding/base64"
@@ -37,57 +38,47 @@ type service struct {
 	pb.UnimplementedGRPCServicesServer
 }
 
+//extend class MainRPC
+type myRPC struct {
+	maingrpc.MainRPC
+	rpch cuahang.Repo
+}
+
 func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (*pb.RPCResponse, error) {
-	resp := &pb.RPCResponse{Data: "Hello " + in.GetAppName(), RPCName: name, Version: ver}
-	rs := models.RequestResult{Error: ""}
-	//get input data into user session
-	var usex models.UserSession
-	usex.Session = in.Session
-	usex.Action = in.Action
-
-	usex.UserIP = in.UserIP
-	usex.Params = in.Params
-	usex.UserID, _ = primitive.ObjectIDFromHex(in.UserID)
-
-	log.Debugf("shopid:%v", in.ShopID)
-	//check shop permission
-	if in.ShopID != "" {
-		shopidObj, _ := primitive.ObjectIDFromHex(in.ShopID)
-		shop := rpch.GetShopById(usex.UserID, shopidObj)
-		if shop.Status == 0 {
-			rs.Error = "Site is disable"
-
-		}
-		usex.Shop = shop
-	}
+	m := myRPC{}
+	//generate user information into usex by calling parent func (m *myRPC) InitUsex that return error string
+	rs := models.RequestResult{Error: m.InitUsex(ctx, in, name, ver)}
+	//if not error then continue call func
 	if rs.Error == "" {
-		if usex.Action == "statusc" {
-			rs = LoadAllStatusCount(usex)
-		} else if usex.Action == "status" {
-			rs = LoadAllStatus(usex)
-		} else if usex.Action == "lao" {
-			rs = LoadAllOrderByStatus(usex)
-		} else if usex.Action == "lg" {
-			rs = LoadCities(usex)
-		} else if usex.Action == "us" {
-			rs = UpdateOrderStatus(usex)
-		} else if usex.Action == "ds" {
-			rs = DeleteOrderStatus(usex)
-		} else if usex.Action == "ss" {
-			rs = SaveStatus(usex)
-		} else if usex.Action == "uo" {
-			rs = UpdateOrder(usex)
+		if m.Usex.Action == "all" {
+			rs = m.LoadAll()
+		} else if m.Usex.Action == "statusc" {
+			rs = m.LoadAllStatusCount()
+		} else if m.Usex.Action == "status" {
+			rs = m.LoadAllStatus()
+		} else if m.Usex.Action == "lao" {
+			rs = m.LoadAllOrderByStatus()
+		} else if m.Usex.Action == "lg" {
+			rs = m.LoadCities()
+		} else if m.Usex.Action == "us" {
+			rs = m.UpdateOrderStatus()
+		} else if m.Usex.Action == "ds" {
+			rs = m.DeleteOrderStatus()
+		} else if m.Usex.Action == "ss" {
+			rs = m.SaveStatus()
+		} else if m.Usex.Action == "uo" {
+			rs = m.UpdateOrder()
+		} else {
+			return m.ReturnNilRespone(), nil
 		}
 	}
-	//convert RequestResult into json
-	log.Debugf("data return:%+v", rs)
-	b, _ := json.Marshal(rs)
-	resp.Data = string(b)
-	return resp, nil
+	//if there is other repo than rpch then accummulate query count here
+	//m.QueryCount+=m.m.Rpch.QueryCount
+	return m.ReturnRespone(rs), nil
 }
 
 //parse order from web (status="") and update
-func parseOrder(order models.Order, usex models.UserSession, defaultstatus models.OrderStatus) {
+func (m *myRPC) parseOrder(order models.Order, defaultstatus models.OrderStatus) {
 	if order.C == "" {
 		return
 	}
@@ -102,7 +93,7 @@ func parseOrder(order models.Order, usex models.UserSession, defaultstatus model
 		code := orderc[:3]
 		orderc = orderc[3:]
 		//get prod
-		prod := rpch.GetProdByCode(usex.Shop.ID, code)
+		prod := m.Rpch.GetProdByCode(m.Usex.Shop.ID, code)
 		if prod.Code == "" {
 			//prod not found
 			break
@@ -145,21 +136,25 @@ func parseOrder(order models.Order, usex models.UserSession, defaultstatus model
 
 	}
 	order.Status = defaultstatus.ID.Hex()
-	rpch.SaveOrder(order)
+	m.Rpch.SaveOrder(order)
 }
-func LoadAllOrderByStatus(usex models.UserSession) models.RequestResult {
+func (m *myRPC) LoadAllOrderByStatus() models.RequestResult {
 
-	args := strings.Split(usex.Params, ",")
-	status := args[0]
+	args := strings.Split(m.Usex.Params, ",")
+	statusid, _ := primitive.ObjectIDFromHex(args[0])
 	page := 1
+	pagesize := 100
 	if len(args) > 1 {
 		page, _ = strconv.Atoi(args[1])
 	}
-	pagesize := int64(100)
+	if len(args) > 2 {
+		pagesize, _ = strconv.Atoi(args[2])
+	}
+
 	count := 1
 	searchterm := ""
-	if len(args) > 2 {
-		searchterm = args[2]
+	if len(args) > 3 {
+		searchterm = args[3]
 		if searchterm != "" {
 			byteDecode, _ := base64.StdEncoding.DecodeString(mycrypto.Base64fix(searchterm))
 			searchterm = string(byteDecode)
@@ -167,7 +162,7 @@ func LoadAllOrderByStatus(usex models.UserSession) models.RequestResult {
 		}
 	}
 
-	count = int(rpch.CountOrdersByStatus(usex.Shop.ID, status, searchterm))
+	count = int(m.Rpch.CountOrdersByStatus(m.Usex.Shop.ID, statusid, searchterm))
 	totalPage := (int)(math.Ceil(float64(count) / float64(pagesize)))
 	if page > totalPage {
 		page = totalPage
@@ -175,30 +170,30 @@ func LoadAllOrderByStatus(usex models.UserSession) models.RequestResult {
 
 	//update order from web
 
-	//orders := rpch.GetOrdersByStatus(usex.Shop.ID, "all", 0, pagesize, "")
-	//default status
-	defaultstatus := rpch.GetDefaultOrderStatus(usex.Shop.ID)
-	if defaultstatus.ID == primitive.NilObjectID {
-		return models.RequestResult{Status: 0, Error: "No Default Status for this shop"}
-	}
+	////orders := m.Rpch.GetOrdersByStatus(m.Usex.Shop.ID, "all", 0, pagesize, "")
+	////default status
+	//defaultstatus,_ := primitive.ObjectIDFromHex(status)
+	//if defaultstatus == primitive.NilObjectID {
+	//	return models.RequestResult{Status: 0, Error: "No Default Status for this shop"}
+	//}
 	//default shipper
-	//defaultshipper := rpch.GetDefaultShipper(usex.Shop.ID)
+	//defaultshipper := m.Rpch.GetDefaultShipper(m.Usex.Shop.ID)
 	//all campaign
-	camps := rpch.GetAllCampaigns(usex.Shop.ID)
+	camps := m.Rpch.GetAllCampaigns(m.Usex.Shop.ID)
 	mapcamp := make(map[string]string)
 	for _, v := range camps {
 		mapcamp[v.ID.Hex()] = v.Name
 	}
 	//for _, order := range orders {
-	//	parseOrder(order, usex, defaultstatus)
+	//	parseOrder(order, m.Usex, defaultstatus)
 	//}
 
-	orders := rpch.GetOrdersByStatus(usex.Shop.ID, status, page, pagesize, searchterm)
+	orders := m.Rpch.GetOrdersByStatus(m.Usex.Shop.ID, statusid, page, pagesize, searchterm)
 	cuss := make(map[string]models.Customer)
 	for k, v := range orders {
 		//get cus
 		if _, ok := cuss[v.Phone]; !ok {
-			cuss[v.Phone] = rpch.GetCusByPhone(v.Phone, usex.Shop.ID.Hex())
+			cuss[v.Phone] = m.Rpch.GetCusByPhone(v.Phone, m.Usex.Shop.ID.Hex())
 		}
 		orders[k].Name = cuss[v.Phone].Name
 		if campname, ok := mapcamp[orders[k].CampaignId]; ok {
@@ -211,7 +206,7 @@ func LoadAllOrderByStatus(usex models.UserSession) models.RequestResult {
 		orders[k].Ward = cuss[v.Phone].Ward
 		orders[k].Address = cuss[v.Phone].Address
 		orders[k].CusNote = cuss[v.Phone].Note
-		orders[k].OrderCount = rpch.CountOrderByCus(v.Phone, usex.Shop.ID.Hex())
+		orders[k].OrderCount = m.Rpch.CountOrderByCus(v.Phone, m.Usex.Shop.ID.Hex())
 		orders[k].SearchIndex = ""
 
 	}
@@ -220,20 +215,20 @@ func LoadAllOrderByStatus(usex models.UserSession) models.RequestResult {
 	//strrt = string(info)
 	return models.RequestResult{Status: 1, Error: "", Data: strrt}
 }
-func LoadAllStatus(usex models.UserSession) models.RequestResult {
+func (m *myRPC) LoadAllStatus() models.RequestResult {
 
 	//default status
-	status := rpch.GetAllOrderStatus(usex.Shop.ID)
+	status := m.Rpch.GetAllOrderStatus(m.Usex.Shop.ID)
 
 	info, _ := json.Marshal(status)
 
 	strrt := string(info)
 	return models.RequestResult{Status: 1, Error: "", Data: strrt}
 }
-func LoadAllStatusCount(usex models.UserSession) models.RequestResult {
+func (m *myRPC) LoadAllStatusCount() models.RequestResult {
 
 	//default status
-	status := rpch.GetAllOrderStatus(usex.Shop.ID)
+	status := m.Rpch.GetAllOrderStatus(m.Usex.Shop.ID)
 	type orderStat struct {
 		Id      string `bson:"id"`
 		Name    string `bson:"name"`
@@ -245,7 +240,7 @@ func LoadAllStatusCount(usex models.UserSession) models.RequestResult {
 	var lstOrderStat []orderStat
 	defaultstat := ""
 	for k, v := range status {
-		status[k].OrderCount = int(rpch.CountOrdersByStatus(usex.Shop.ID, v.ID.Hex(), ""))
+		status[k].OrderCount = int(m.Rpch.CountOrdersByStatus(m.Usex.Shop.ID, v.ID, ""))
 		if status[k].Default {
 			defaultstat = status[k].ID.Hex()
 		}
@@ -267,11 +262,11 @@ func LoadAllStatusCount(usex models.UserSession) models.RequestResult {
 	return models.RequestResult{Status: 1, Error: "", Data: `{"default":"` + defaultstat + `","status":` + strrt + `}`}
 
 }
-func LoadCities(usex models.UserSession) models.RequestResult {
+func (m *myRPC) LoadCities() models.RequestResult {
 	//
 	////default status
-	//source:=usex.Params
-	//cities := rpch.GetCities(source)
+	//source:=m.Usex.Params
+	//cities := m.Rpch.GetCities(source)
 	////convert data to have field code for select box
 	//strrt:=""
 	//if source=="ghtk"{
@@ -304,16 +299,16 @@ func LoadCities(usex models.UserSession) models.RequestResult {
 	return models.RequestResult{Status: 1, Error: "", Data: ""}
 }
 
-func UpdateOrderStatus(usex models.UserSession) models.RequestResult {
+func (m *myRPC) UpdateOrderStatus() models.RequestResult {
 
-	info := strings.Split(usex.Params, ",")
+	info := strings.Split(m.Usex.Params, ",")
 	cancelPartner := "0"
 	if len(info) > 1 {
 		changestatusid, _ := primitive.ObjectIDFromHex(info[1])
 		orderid, _ := primitive.ObjectIDFromHex(info[0])
 
 		//check cancel ghtk status:
-		status := rpch.GetStatusByID(changestatusid, usex.Shop.ID)
+		status := m.Rpch.GetStatusByID(changestatusid, m.Usex.Shop.ID)
 		ghtkstatussync := status.PartnerStatus["ghtk"]
 		if ghtkstatussync != nil {
 			for _, statcode := range ghtkstatussync {
@@ -323,12 +318,12 @@ func UpdateOrderStatus(usex models.UserSession) models.RequestResult {
 			}
 		}
 		//check stock
-		order := rpch.GetOrderByID(orderid, usex.Shop.ID)
+		order := m.Rpch.GetOrderByID(orderid, m.Usex.Shop.ID)
 		if order.Status == "" {
 			return models.RequestResult{Status: 0, Error: "order not found", Data: ""}
 		}
 		statusid, _ := primitive.ObjectIDFromHex(order.Status)
-		oldstat := rpch.GetStatusByID(statusid, usex.Shop.ID)
+		oldstat := m.Rpch.GetStatusByID(statusid, m.Usex.Shop.ID)
 		if oldstat.Export != status.Export {
 			//update stock
 			sign := 1
@@ -337,7 +332,7 @@ func UpdateOrderStatus(usex models.UserSession) models.RequestResult {
 			}
 			var exportitems []models.ExportItem
 			for _, v := range order.Items {
-				prod := rpch.GetProdByCode(usex.Shop.ID, v.ProdCode)
+				prod := m.Rpch.GetProdByCode(m.Usex.Shop.ID, v.ProdCode)
 				var newexportitem models.ExportItem
 				for _, prop := range prod.Properties {
 					if prop.Code == v.Code {
@@ -350,29 +345,29 @@ func UpdateOrderStatus(usex models.UserSession) models.RequestResult {
 						newexportitem.Code = v.ProdCode
 						newexportitem.ItemCode = v.Code
 						newexportitem.Num = v.Num * sign
-						newexportitem.ShopId = usex.Shop.ID.Hex()
+						newexportitem.ShopId = m.Usex.Shop.ID.Hex()
 						break
 					}
 				}
 				exportitems = append(exportitems, newexportitem)
 
 			}
-			if !rpch.ExportItem(exportitems) {
+			if !m.Rpch.ExportItem(exportitems) {
 				return models.RequestResult{Status: 0, Error: "Error update stock", Data: ""}
 
 			}
 		}
-		rpch.UpdateOrderStatus(usex.Shop.ID, changestatusid, orderid.Hex())
+		m.Rpch.UpdateOrderStatus(m.Usex.Shop.ID, changestatusid, orderid.Hex())
 
 	}
 	return models.RequestResult{Status: 1, Error: "", Message: cancelPartner, Data: ""}
 
 }
 
-func SaveStatus(usex models.UserSession) models.RequestResult {
+func (m *myRPC) SaveStatus() models.RequestResult {
 
 	var status models.OrderStatus
-	err := json.Unmarshal([]byte(usex.Params), &status)
+	err := json.Unmarshal([]byte(m.Usex.Params), &status)
 	if !c3mcommon.CheckError("update status parse json", err) {
 		return models.RequestResult{Status: 0, Error: "update status fail", Data: ""}
 
@@ -380,7 +375,7 @@ func SaveStatus(usex models.UserSession) models.RequestResult {
 	//check old status
 	oldstat := status
 	if oldstat.ID != primitive.NilObjectID {
-		oldstat = rpch.GetStatusByID(status.ID, usex.Shop.ID)
+		oldstat = m.Rpch.GetStatusByID(status.ID, m.Usex.Shop.ID)
 		oldstat.Title = status.Title
 		oldstat.Color = status.Color
 		oldstat.Default = status.Default
@@ -388,28 +383,28 @@ func SaveStatus(usex models.UserSession) models.RequestResult {
 		oldstat.Export = status.Export
 		oldstat.PartnerStatus = status.PartnerStatus
 	} else {
-		oldstat.UserId = usex.UserID.Hex()
-		oldstat.ShopId = usex.Shop.ID.Hex()
+		oldstat.UserId = m.Usex.UserID.Hex()
+		oldstat.ShopId = m.Usex.Shop.ID.Hex()
 	}
 
 	//check default
 	if oldstat.Default == true {
-		rpch.UnSetStatusDefault(usex.Shop.ID)
+		m.Rpch.UnSetStatusDefault(m.Usex.Shop.ID)
 	}
 	if oldstat.Color == "" {
 		oldstat.Color = "ffffff"
 	}
 
-	oldstat = rpch.SaveOrderStatus(oldstat)
+	oldstat = m.Rpch.SaveOrderStatus(oldstat)
 	b, _ := json.Marshal(oldstat)
 	return models.RequestResult{Status: 1, Error: "", Data: string(b)}
 
 }
 
-func DeleteOrderStatus(usex models.UserSession) models.RequestResult {
+func (m *myRPC) DeleteOrderStatus() models.RequestResult {
 	//get stat
-	statusid, _ := primitive.ObjectIDFromHex(usex.Params)
-	stat := rpch.GetStatusByID(statusid, usex.Shop.ID)
+	statusid, _ := primitive.ObjectIDFromHex(m.Usex.Params)
+	stat := m.Rpch.GetStatusByID(statusid, m.Usex.Shop.ID)
 	if stat.ID == primitive.NilObjectID {
 		return models.RequestResult{Status: 0, Error: "Status not found"}
 
@@ -419,25 +414,25 @@ func DeleteOrderStatus(usex models.UserSession) models.RequestResult {
 
 	}
 	//check status empty
-	count := rpch.GetCountOrderByStatus(stat)
+	count := m.Rpch.GetCountOrderByStatus(stat)
 	//check old status
 	if count > 0 {
 		return models.RequestResult{Status: 0, Error: "Status not empty. " + strconv.Itoa(int(count)) + " orders use this status"}
 
 	}
 
-	rpch.DeleteOrderStatus(stat)
+	m.Rpch.DeleteOrderStatus(stat)
 	return models.RequestResult{Status: 1, Error: ""}
 }
 
-func UpdateOrder(usex models.UserSession) models.RequestResult {
-	shop := rpch.GetShopById(usex.UserID, usex.Shop.ID)
+func (m *myRPC) UpdateOrder() models.RequestResult {
+	shop := m.Rpch.GetShopById(m.Usex.UserID, m.Usex.Shop.ID)
 	if shop.Status == 0 {
 		return models.RequestResult{Status: 0, Error: "Shop is disabled"}
 
 	}
 	var order models.Order
-	err := json.Unmarshal([]byte(usex.Params), &order)
+	err := json.Unmarshal([]byte(m.Usex.Params), &order)
 	if !c3mcommon.CheckError("update order parse json", err) {
 		return models.RequestResult{Status: 0, Error: "update order fail"}
 
@@ -445,30 +440,30 @@ func UpdateOrder(usex models.UserSession) models.RequestResult {
 	oldorder := order
 	mapolditems := make(map[string]models.OrderItem)
 	if order.ID != primitive.NilObjectID {
-		oldorder = rpch.GetOrderByID(order.ID, shop.ID)
+		oldorder = m.Rpch.GetOrderByID(order.ID, shop.ID)
 		for _, v := range oldorder.Items {
 			mapolditems[v.Code] = v
 		}
 	} else {
-		oldorder.ShopId = usex.Shop.ID.Hex()
+		oldorder.ShopId = m.Usex.Shop.ID.Hex()
 		oldorder.ID = primitive.NewObjectID()
 		oldorder.Created = time.Now().Unix()
 		oldorder.Modified = oldorder.Created
 	}
 
 	//all campaign
-	camps := rpch.GetAllCampaigns(usex.Shop.ID)
+	camps := m.Rpch.GetAllCampaigns(m.Usex.Shop.ID)
 	mapcamp := make(map[string]string)
 	for _, v := range camps {
 		mapcamp[v.ID.Hex()] = v.Name
 	}
 	//all shipper
-	//shippers := rpch.GetAllShipper(usex.Shop.ID)
+	//shippers := m.Rpch.GetAllShipper(m.Usex.Shop.ID)
 	//mapshipper := make(map[string]string)
 	//for _, v := range shippers {
 	//	mapshipper[v.ID] = v.Name
 	//}
-	stats := rpch.GetAllOrderStatus(usex.Shop.ID)
+	stats := m.Rpch.GetAllOrderStatus(m.Usex.Shop.ID)
 	mapstat := make(map[string]models.OrderStatus)
 	for _, v := range stats {
 		mapstat[v.ID.Hex()] = v
@@ -485,7 +480,7 @@ func UpdateOrder(usex models.UserSession) models.RequestResult {
 				olditemcount = mapolditems[v.Code].Num
 			}
 			var newexportitem models.ExportItem
-			prod := rpch.GetProdByCode(usex.Shop.ID, v.ProdCode)
+			prod := m.Rpch.GetProdByCode(m.Usex.Shop.ID, v.ProdCode)
 			for _, prop := range prod.Properties {
 				if prop.Code == v.Code {
 					prop.Stock -= v.Num - olditemcount
@@ -498,7 +493,7 @@ func UpdateOrder(usex models.UserSession) models.RequestResult {
 					newexportitem.ItemCode = v.Code
 					newexportitem.Num = v.Num
 
-					newexportitem.ShopId = usex.Shop.ID.Hex()
+					newexportitem.ShopId = m.Usex.Shop.ID.Hex()
 					break
 				}
 			}
@@ -510,14 +505,14 @@ func UpdateOrder(usex models.UserSession) models.RequestResult {
 		var oldexportitems []models.ExportItem
 		for _, v := range mapolditems {
 			var old models.ExportItem
-			old.ShopId = usex.Shop.ID.Hex()
+			old.ShopId = m.Usex.Shop.ID.Hex()
 			old.Code = v.ProdCode
 			old.ItemCode = v.Code
 			old.Num = -v.Num
 			oldexportitems = append(oldexportitems, old)
 		}
-		rpch.ExportItem(oldexportitems)
-		if !rpch.ExportItem(exportitems) {
+		m.Rpch.ExportItem(oldexportitems)
+		if !m.Rpch.ExportItem(exportitems) {
 			return models.RequestResult{Status: 0, Error: "Error update stock"}
 
 		}
@@ -525,9 +520,9 @@ func UpdateOrder(usex models.UserSession) models.RequestResult {
 	}
 	var cus models.Customer
 	if oldorder.Phone == order.Phone {
-		cus = rpch.GetCusByPhone(order.Phone, shop.ID.Hex())
+		cus = m.Rpch.GetCusByPhone(order.Phone, shop.ID.Hex())
 	} else if oldorder.Phone == "" && oldorder.Email == order.Email {
-		cus = rpch.GetCusByEmail(order.Email, shop.ID.Hex())
+		cus = m.Rpch.GetCusByEmail(order.Email, shop.ID.Hex())
 	}
 	cus.Phone = order.Phone
 	cus.Name = order.Name
@@ -538,7 +533,7 @@ func UpdateOrder(usex models.UserSession) models.RequestResult {
 	cus.Email = order.Email
 	cus.Note = order.CusNote
 	cus.ShopId = shop.ID.Hex()
-	if rpch.SaveCus(cus) {
+	if m.Rpch.SaveCus(cus) {
 		//save order
 		oldorder.City = order.City
 		oldorder.District = order.District
@@ -572,7 +567,7 @@ func UpdateOrder(usex models.UserSession) models.RequestResult {
 			oldorder.Whookupdate = time.Now().Unix()
 		}
 
-		rpch.SaveOrder(oldorder)
+		m.Rpch.SaveOrder(oldorder)
 		oldorder.SearchIndex = ""
 		info, _ := json.Marshal(oldorder)
 		strrt := string(info)
@@ -581,6 +576,89 @@ func UpdateOrder(usex models.UserSession) models.RequestResult {
 	}
 	return models.RequestResult{Status: 0}
 
+}
+
+func (m *myRPC) LoadAll() models.RequestResult {
+	log.Debugf("params: %s", m.Usex.Params)
+	args := strings.Split(m.Usex.Params, ",")
+	statusid, _ := primitive.ObjectIDFromHex(args[0])
+	page := 1
+	pagesize := 10
+	if len(args) > 1 {
+		page, _ = strconv.Atoi(args[1])
+	}
+	if len(args) > 2 {
+		size, _ := strconv.Atoi(args[2])
+		pagesize = size
+	}
+	searchterm := ""
+	if len(args) > 3 {
+		searchterm = args[3]
+		if searchterm != "" {
+			byteDecode, _ := base64.StdEncoding.DecodeString(mycrypto.Base64fix(searchterm))
+			searchterm = string(byteDecode)
+			log.Debugf("searchterm: %s", searchterm)
+		}
+	}
+	start := time.Now()
+	status := m.Rpch.GetAllOrderStatus(m.Usex.Shop.ID)
+	log.Debugf("GetAllOrderStatus: %s", time.Since(start))
+	start = time.Now()
+	orders, total, totalPage := m.GetAllOrder(statusid, page, pagesize, searchterm)
+	log.Debugf("GetAllOrder: %s", time.Since(start))
+	var phones []string
+	for _, v := range orders {
+		phones = append(phones, v.Phone)
+	}
+	//map customer
+	start = time.Now()
+	cus := m.Rpch.GetCustomerByPhones(phones, m.Usex.Shop.ID)
+	log.Debugf("GetCustomerByPhones: %s", time.Since(start))
+	start = time.Now()
+	cuscount := m.Rpch.CoundOrderByPhones(phones, m.Usex.Shop.ID)
+	log.Debugf("CoundOrderByPhones: %s", time.Since(start))
+	log.Debugf("phones count:%d", len(phones))
+	log.Debugf("cus count:%d", len(cus))
+	log.Debugf("cuscount count:%d", len(cuscount))
+	for k, _ := range cus {
+		cus[k].OrderCount = cuscount[cus[k].Phone]
+	}
+
+	rtdata := struct {
+		Total     int
+		Status    []models.OrderStatus
+		Orders    []models.Order
+		Customers []models.Customer
+		PageCount int
+	}{Status: status, Orders: orders, Customers: cus, Total: total, PageCount: totalPage}
+
+	info, err := json.Marshal(rtdata)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	strrt := string(info)
+	return models.RequestResult{Status: 1, Error: "", Data: strrt}
+
+}
+
+func (m *myRPC) GetAllOrder(statusid primitive.ObjectID, page, pagesize int, searchterm string) (orders []models.Order, total int, totalPage int) {
+
+	total = int(m.Rpch.CountOrdersByStatus(m.Usex.Shop.ID, statusid, searchterm))
+	totalPage = (int)(math.Ceil(float64(total) / float64(pagesize)))
+	if page > totalPage {
+		page = totalPage
+	}
+	//camps := m.Rpch.GetAllCampaigns(m.Usex.Shop.ID)
+	//mapcamp := make(map[string]string)
+	//for _, v := range camps {
+	//	mapcamp[v.ID.Hex()] = v.Name
+	//}
+	////for _, order := range orders {
+	////	parseOrder(order, m.Usex, defaultstatus)
+	////}
+
+	orders = m.Rpch.GetOrdersByStatus(m.Usex.Shop.ID, statusid, page, pagesize, searchterm)
+	return
 }
 func main() {
 	//default port for service

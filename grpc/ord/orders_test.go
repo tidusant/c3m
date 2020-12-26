@@ -1,10 +1,11 @@
 package main
 
 import (
-	pb "colis/grpcs/protoc"
-	"colis/models"
-	rpch "colis/repos/cuahang"
 	"encoding/json"
+	pb "github.com/tidusant/c3m/grpc/protoc"
+	rpch "github.com/tidusant/c3m/repo/cuahang"
+	"github.com/tidusant/c3m/repo/models"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"fmt"
 
@@ -32,9 +33,10 @@ func setup() {
 	userLogin := rpch.GetLogin(testsession)
 
 	userId = userLogin.UserId.Hex()
-	shopId = userLogin.ShopId
+	shopId = userLogin.ShopId.Hex()
 	//change to demoshop
-	shopchange := rpch.UpdateShopLogin(testsession, shopOriginId)
+	shopOriginIdObj, _ := primitive.ObjectIDFromHex(shopOriginId)
+	shopchange := rpch.UpdateShopLogin(testsession, shopOriginIdObj)
 	if shopchange.ID.Hex() == "" {
 		fmt.Println("Test fail: User can not change to origin shop in setup")
 		os.Exit(0)
