@@ -27,7 +27,7 @@ spec:
             - containerPort: 8081 #Exposes the port 8901 of the container
           env:
             - name: SESSION_URI
-              value: "mongodb://sellpos:sellpos1234%50@mongo/sellpos?retryWrites=true&w=majority"
+              value: "mongodb://sellpos:sellpos1234%40@mongo/sellpos?retryWrites=true&w=majority"
             - name: SESSION_DB
               value: "sellpos_dev"
             - name: AUTH_IP
@@ -36,6 +36,7 @@ spec:
               value: "c3m-grpc-shop-service:8902"
             - name: ORD_IP
               value: "c3m-grpc-ord-service:8903"
+              #value: "c3m-grpc-ord-service.colis-dev.svc.cluster.local"
 ---
 kind: Service
 apiVersion: v1
