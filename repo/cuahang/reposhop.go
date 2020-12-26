@@ -4,48 +4,61 @@ import (
 	//"github.com/spf13/viper"
 	"github.com/tidusant/c3m/common/c3mcommon"
 	"github.com/tidusant/c3m/common/log"
+
 	"github.com/tidusant/c3m/repo/models"
 	"go.mongodb.org/mongo-driver/bson/primitive" // for BSON ObjectID
 	"gopkg.in/mgo.v2/bson"
+	"time"
 )
 
 /*for dashboard
 =============================================================================
 */
 
-func UpdateTheme(shopid, code string) string {
+func (r *Repo) UpdateTheme(shopid, code string) string {
+	start := time.Now()
 	col := db.Collection("addons_shops")
 
 	change := bson.M{"$set": bson.M{"theme": code}}
 	_, err := col.UpdateOne(ctx, bson.M{"_id": shopid}, change)
-	c3mcommon.CheckError("update theme", err)
+	r.QueryCount++
+	if !c3mcommon.CheckError("update theme", err) {
+		code = ""
+	}
 
+	r.QueryTime += time.Since(start)
 	return code
 }
-func LoadShopById(session string, userid, shopid primitive.ObjectID) models.Shop {
+func (r *Repo) LoadShopById(session string, userid, shopid primitive.ObjectID) models.Shop {
+	start := time.Now()
 	col := db.Collection("addons_userlogin")
+	var shop models.Shop
 	if shopid == primitive.NilObjectID {
 		//get first shop
-		shopid = GetShopDefault(userid)
+		shop = r.GetShopDefault(userid)
+	} else {
+		shop = r.GetShopById(userid, shopid)
 	}
-
-	shop := GetShopById(userid, shopid)
-	if shop.Name != "" {
-		log.Debugf("update login info:shopid %s", shop.ID)
+	if shop.ID != primitive.NilObjectID {
 		cond := bson.M{"session": session, "userid": userid}
 		change := bson.M{"$set": bson.M{"shopid": shop.ID}}
-		col.UpdateOne(ctx, cond, change)
+		_, err := col.UpdateOne(ctx, cond, change)
+		r.QueryCount++
+		c3mcommon.CheckError("Update shop to UserLogin", err)
 	}
+	r.QueryTime += time.Since(start)
 	return shop
 }
-func GetShopDefault(userid primitive.ObjectID) primitive.ObjectID {
+
+// just get the first query shop for user
+func (r *Repo) GetShopDefault(userid primitive.ObjectID) models.Shop {
+	start := time.Now()
 	col := db.Collection("addons_shops")
+
 	var result models.Shop
 
 	col.FindOne(ctx, bson.M{"users": userid}).Decode(&result)
-	if result.Name != "" {
-		return result.ID
-	}
+	r.QueryCount++
 
 	//pipeline := []bson.M{{"$match": bson.M{"name": "abc"}}}
 	//col.Pipe(pipeline).All(&result)
@@ -61,14 +74,14 @@ func GetShopDefault(userid primitive.ObjectID) primitive.ObjectID {
 	//	if len(result) > 0 {
 	//		return result[0].ID.Hex()
 	//	}
-	return primitive.NilObjectID
+	r.QueryTime += time.Since(start)
+	return result
 }
-func GetShopById(userid, shopid primitive.ObjectID) models.Shop {
+func (r *Repo) GetShopById(userid, shopid primitive.ObjectID) models.Shop {
+	start := time.Now()
 	coluser := db.Collection("addons_shops")
 	var shop models.Shop
-	if shopid == primitive.NilObjectID {
-		return shop
-	}
+
 	// Create a BSON ObjectID by passing string to ObjectIDFromHex() method
 	//shopidObj,_ := primitive.ObjectIDFromHex(shopid)
 	//useridObj:= bson.ObjectIdHex(userid)
@@ -76,36 +89,42 @@ func GetShopById(userid, shopid primitive.ObjectID) models.Shop {
 	cond := bson.M{"_id": shopid}
 	//cond := bson.M{"users": userid}
 	cond["users"] = userid
-	log.Debugf("condition query user %v,%s, %v", cond, userid, shopid)
+	log.Debugf("Loadshopbyid:%s,%s", userid, shopid)
 
 	err := coluser.FindOne(ctx, cond).Decode(&shop)
+	r.QueryCount++
 	c3mcommon.CheckError("Error query shop in GetShopById", err)
+	r.QueryTime += time.Since(start)
 	return shop
 }
-func GetShopLimitbyKey(shopid primitive.ObjectID, key string) int {
-
+func (r *Repo) GetShopLimitbyKey(shopid primitive.ObjectID, key string) int {
+	start := time.Now()
 	coluser := db.Collection("shoplimits")
 
 	cond := bson.M{"shopid": shopid, "key": key}
 	var rs models.ShopLimit
 	err := coluser.FindOne(ctx, cond).Decode(&rs)
+	r.QueryCount++
 	c3mcommon.CheckError("GetShopLimitbyKey :", err)
+	r.QueryTime += time.Since(start)
 	return rs.Value
 }
-func GetShopLimits(shopid primitive.ObjectID) []models.ShopLimit {
-
+func (r *Repo) GetShopLimits(shopid primitive.ObjectID) []models.ShopLimit {
+	start := time.Now()
 	coluser := db.Collection("shoplimits")
 
 	cond := bson.M{"shopid": shopid}
 	var rs []models.ShopLimit
 	cursor, err := coluser.Find(ctx, cond)
+	r.QueryCount++
 	if err = cursor.All(ctx, &rs); err != nil {
 		c3mcommon.CheckError("Update Error:", err)
 	}
-
+	r.QueryTime += time.Since(start)
 	return rs
 }
-func GetOtherShopById(userid, shopid primitive.ObjectID) []models.Shop {
+func (r *Repo) GetOtherShopById(userid, shopid primitive.ObjectID) []models.Shop {
+	start := time.Now()
 	coluser := db.Collection("addons_shops")
 	var shops []models.Shop
 	if shopid == primitive.NilObjectID {
@@ -117,19 +136,23 @@ func GetOtherShopById(userid, shopid primitive.ObjectID) []models.Shop {
 	//if userid != "594f665df54c58a2udfl54d3er" && userid != viper.GetString("config.webuserapi") {
 	cond["users"] = userid
 
-	log.Debugf("GetOtherShopById %v %v", cond)
 	//}
 	cursor, err := coluser.Find(ctx, cond)
+	r.QueryCount++
 	if err = cursor.All(ctx, &shops); err != nil {
 		c3mcommon.CheckError("GetOtherShopById", err)
 	}
-	log.Debugf("GetOtherShopById %v ", shops)
+
+	r.QueryTime += time.Since(start)
 	return shops
 }
-func GetDemoShop() models.Shop {
+func (r *Repo) GetDemoShop() models.Shop {
+	start := time.Now()
 	coluser := db.Collection("addons_shops")
 	var shop models.Shop
 	coluser.FindOne(ctx, bson.M{"name": "demo"}).Decode(&shop)
+	r.QueryCount++
+	r.QueryTime += time.Since(start)
 	return shop
 }
 
@@ -264,15 +287,18 @@ func GetDemoShop() models.Shop {
 // 	coluser.Update(cond, change)
 // 	return shop
 // }
-func LoadAllShopAlbums(shopid string) []models.ShopAlbum {
+func (r *Repo) LoadAllShopAlbums(shopid string) []models.ShopAlbum {
+	start := time.Now()
 	col := db.Collection("shopalbums")
 	var rs []models.ShopAlbum
 	cursor, err := col.Find(ctx, bson.M{"shopid": shopid})
+	r.QueryCount++
 	if err = cursor.All(ctx, &rs); err != nil {
 		c3mcommon.CheckError("Update Error:", err)
 	}
 
 	c3mcommon.CheckError("get ShopAlbum", err)
+	r.QueryTime += time.Since(start)
 	return rs
 }
 

@@ -8,12 +8,18 @@ import (
 	"github.com/tidusant/c3m/repo/models"
 	"go.mongodb.org/mongo-driver/mongo"
 	"os"
+	"time"
 )
 
 var (
 	db  *mongo.Database
 	ctx context.Context
 )
+
+type Repo struct {
+	QueryCount int `default:0`
+	QueryTime  time.Duration
+}
 
 func init() {
 	log.Info("init repo cuahang...")

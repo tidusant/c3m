@@ -15,6 +15,8 @@ message RPCResponse  {
 	string RPCName =1;
 	string Version =2;
 	string Data =3;
+	int32 Query=4;
+	string Time=5;
 }
 
 //request type of all rpc response

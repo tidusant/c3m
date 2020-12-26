@@ -10,32 +10,38 @@ import (
 	"time"
 )
 
-func GetAllCampaigns(shopid primitive.ObjectID) []models.Campaign {
+func (r *Repo) GetAllCampaigns(shopid primitive.ObjectID) []models.Campaign {
+	start := time.Now()
 	col := db.Collection("addons_campaigns")
 	var rs []models.Campaign
 	cond := bson.M{"shopid": shopid.Hex()}
 	cursor, err := col.Find(ctx, cond)
+	r.QueryCount++
 	if err = cursor.All(ctx, &rs); err != nil {
 		log.Fatal(err)
 	}
 	c3mcommon.CheckError("Getall campaign", err)
+	r.QueryTime += time.Since(start)
 	return rs
 }
 
-func GetCampaignsByRange(shopid primitive.ObjectID, start time.Time, end time.Time) []models.Campaign {
+func (r *Repo) GetCampaignsByRange(shopid primitive.ObjectID, start time.Time, end time.Time) []models.Campaign {
+	s := time.Now()
 	col := db.Collection("addons_campaigns")
 	var rs []models.Campaign
 	cond := bson.M{"shopid": shopid.Hex(), "start": bson.M{"$lt": end}, "end": bson.M{"$gt": start}}
 	cursor, err := col.Find(ctx, cond)
+	r.QueryCount++
 	if err = cursor.All(ctx, &rs); err != nil {
 		log.Fatal(err)
 	}
 	c3mcommon.CheckError("Getall campaign by range", err)
+	r.QueryTime += time.Since(s)
 	return rs
 }
 
 //
-//func GetCampaignByID(shopid, ID string) models.Campaign {
+//func (r *Repo)GetCampaignByID(shopid, ID string) models.Campaign {
 //	col := db.Collection("addons_campaigns")
 //	var rs models.Campaign
 //	cond := bson.M{"shopid": shopid, "_id": bson.ObjectIdHex(ID)}
@@ -44,7 +50,7 @@ func GetCampaignsByRange(shopid primitive.ObjectID, start time.Time, end time.Ti
 //	c3mcommon.CheckError("Get campaign by id", err)
 //	return rs
 //}
-//func GetOrderStatusMap(shopid string) map[string]models.OrderStatus {
+//func (r *Repo)GetOrderStatusMap(shopid string) map[string]models.OrderStatus {
 //	statsmap := make(map[string]models.OrderStatus)
 //	stats := GetAllOrderStatus(shopid)
 //	for _, stat := range stats {
@@ -52,7 +58,7 @@ func GetCampaignsByRange(shopid primitive.ObjectID, start time.Time, end time.Ti
 //	}
 //	return statsmap
 //}
-//func GetCampaignDetailByID(shopid string, camp models.Campaign) models.Campaign {
+//func (r *Repo)GetCampaignDetailByID(shopid string, camp models.Campaign) models.Campaign {
 //	col := db.Collection("addons_orders")
 //
 //	rs := make(map[string]models.CampaignStatusDetail)
@@ -94,7 +100,7 @@ func GetCampaignsByRange(shopid primitive.ObjectID, start time.Time, end time.Ti
 //	}
 //	return camp
 //}
-//func SaveCampaign(camp models.Campaign) models.Campaign {
+//func (r *Repo)SaveCampaign(camp models.Campaign) models.Campaign {
 //	col := db.Collection("addons_campaigns")
 //	if camp.ID == "" {
 //		camp.ID = bson.NewObjectId()
@@ -109,7 +115,7 @@ func GetCampaignsByRange(shopid primitive.ObjectID, start time.Time, end time.Ti
 //	col.UpdateOne(ctx,filter, update,opts)
 //	return camp
 //}
-//func DeleteCampaign(camp models.Campaign) bool {
+//func (r *Repo)DeleteCampaign(camp models.Campaign) bool {
 //	col := db.Collection("addons_campaigns")
 //	_,err := col.DeleteOne(ctx,camp)
 //	return c3mcommon.CheckError("Delete campaign", err)
