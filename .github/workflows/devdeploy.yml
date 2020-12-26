@@ -1,6 +1,7 @@
 name: Dev deployment
 env:
   SERVER: colis-dev
+  PREFIX: c3m
   COMMIT_FILTER: DEPLOY
   SLACK_COMMAND: "curl -X POST -H 'Content-type: application/json' --data"
 on:
@@ -39,7 +40,7 @@ jobs:
             echo "::set-output name=isdeploy::true"
             echo "::set-output name=apppath::$result2"
             echo "::set-output name=appname::${result2//\//\-}"
-            ${SLACK_COMMAND} '{"text":"Start deploy ${DEPLOY_NAME} !"}' ${{secrets.SLACK_WEBHOOK_URL}}
+            ${SLACK_COMMAND} '{"text":"Start deploy '+${PREFIX}+'-'+$result2+' !"}' ${{secrets.SLACK_WEBHOOK_URL}}
           else            
             echo "not a DEPLOY command"
             echo "::set-output name=isdeploy::false"
@@ -92,8 +93,8 @@ jobs:
         echo "====== Docker build ========"
         echo ${{ secrets.DOCKER_TOKEN }} | docker login --username ${{ secrets.DOCKER_USERNAME }} --password-stdin 
         docker build -t ${{needs.check.outputs.appname}} .
-        docker tag ${DEPLOY_NAME} ${{ secrets.DOCKER_USERNAME }}/${{needs.check.outputs.appname}}
-        docker push ${{ secrets.DOCKER_USERNAME }}/${{needs.check.outputs.appname}}
+        docker tag ${{needs.check.outputs.appname}} ${{ secrets.DOCKER_USERNAME }}/${PREFIX}-${{needs.check.outputs.appname}}
+        docker push ${{ secrets.DOCKER_USERNAME }}/${PREFIX}-${{needs.check.outputs.appname}}
         ${SLACK_COMMAND} '{"text":"Push to docker done!"}' ${{secrets.SLACK_WEBHOOK_URL}}
             
   deploy:
@@ -110,6 +111,6 @@ jobs:
       run: |
         sudo kubectl apply -f https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${{needs.check.outputs.branch}}/${{needs.check.outputs.apppath}}/k8s_devdeploy.yml
         #force pull latest image
-        sudo kubectl -n ${SERVER} rollout restart deploy ${{needs.check.outputs.appname}}
+        sudo kubectl -n ${SERVER} rollout restart deploy ${PREFIX}-${{needs.check.outputs.appname}}
         ${SLACK_COMMAND} '{"text":"Kubernetes deploy done!"}' ${{secrets.SLACK_WEBHOOK_URL}}
    
