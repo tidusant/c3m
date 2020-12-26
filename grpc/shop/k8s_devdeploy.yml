@@ -27,15 +27,9 @@ spec:
             - containerPort: 8902 #Exposes the port 8901 of the container test
           env:
             - name: CHADMIN_URI
-              valueFrom:
-                secretKeyRef:
-                  name: mysecret
-                  key: devdb_url
+              value: "mongodb://sellpos:sellpos1234%50@mongo/sellpos?retryWrites=true&w=majority"
             - name: CHADMIN_DB
-              valueFrom:
-                secretKeyRef:
-                  name: mysecret
-                  key: devdb_name
+              value: "sellpos"
 
 ---
 kind: Service
