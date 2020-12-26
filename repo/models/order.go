@@ -59,7 +59,7 @@ type OrderStatus struct {
 	ShopId  string             `bson:"shopid"`
 	//Created       time.Time     `bson:"created"`
 	//Modified      time.Time     `bson:"modified"`
-	Color         string `bson:"color"`
+	Color         string
 	OrderCount    int
 	PartnerStatus map[string][]string `bson:partnerstatus`
 }
