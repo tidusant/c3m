@@ -23,12 +23,13 @@ var shopId = ""
 var shopChangeNoPermissionId = "5a52f89a7b4b30ed5ecfce9d" //shopname: Hoa Giay
 var shopChangeId = "59a275355f4aec1b026b6f5e"             //shopname: Colis
 var shopOriginId = "5955d130e761cf70ffb8e49b"             //shopname: demo
-var m *myRPC
+var m myRPC
 
 func setup() {
 	// Set up a connection to the server.
 	ctx = context.Background()
 	svc = &service{}
+	m = myRPC{}
 	//get userid and shopid from session random
 	//NOTE: must run auth_test before to have data in db
 	userLogin := m.Rpch.GetLogin(testsession)
