@@ -40,7 +40,7 @@ jobs:
             echo "::set-output name=isdeploy::true"
             echo "::set-output name=apppath::$result2"
             echo "::set-output name=appname::${result2//\//\-}"
-            ${SLACK_COMMAND} '{"text":"Start deploy ${PREFIX}-$result2 !"}' ${{secrets.SLACK_WEBHOOK_URL}}
+            ${SLACK_COMMAND} {"text":"Start deploy ${PREFIX}-$result2 !"} ${{secrets.SLACK_WEBHOOK_URL}}
           else            
             echo "not a DEPLOY command"
             echo "::set-output name=isdeploy::false"
