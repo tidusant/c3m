@@ -27,7 +27,7 @@ spec:
             - containerPort: 8901 #Exposes the port 8901 of the container test
           env:
             - name: CHADMIN_URI
-                value: "mongodb://sellpos:sellpos1234%50@mongo/sellpos?retryWrites=true&w=majority"
+              value: "mongodb://sellpos:sellpos1234%50@mongo/sellpos?retryWrites=true&w=majority"
             - name: CHADMIN_DB
               value: "sellpos"
 
