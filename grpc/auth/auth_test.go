@@ -2,8 +2,7 @@ package main
 
 import (
 	"github.com/tidusant/c3m/common/c3mcommon"
-
-	pb "github.com/tidusant/c3m-grpc-protoc/protoc"
+	pb "github.com/tidusant/c3m/grpc/protoc"
 	"github.com/tidusant/c3m/repo/models"
 
 	"encoding/json"
@@ -21,6 +20,7 @@ var testsession string = "random"
 var ctx context.Context
 var svc *service
 var appname = "test-grpc-auth"
+var m *Auth
 
 func setup() {
 	// Set up a connection to the server.
