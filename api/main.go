@@ -11,6 +11,7 @@ import (
 	"github.com/tidusant/c3m/repo/models"
 	rpsex "github.com/tidusant/c3m/repo/session"
 	"google.golang.org/grpc"
+
 	"os"
 	"time"
 
@@ -27,25 +28,57 @@ func init() {
 
 }
 
-var authIP = "127.0.0.1:8901"
-
+var grpcConns map[string]pb.GRPCServicesClient
+var grpcAddressMap map[string]string
 var exposeport = "8081"
 
 //main function app run here
 func main() {
 
-	//get address of grpc auth from ENV
-	authIP = os.Getenv("AUTH_IP")
-
-	//show info to console
-	fmt.Println("auth address: " + authIP)
-	fmt.Println("\n portal admin running with port " + exposeport)
+	//init grpc
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	connectGrpcs(ctx)
 
 	//start gin
 	router := gin.Default()
 	router.POST("/*name", postHandler)
 	router.Run(":" + exposeport)
 
+}
+
+func connectGrpcs(ctx context.Context) {
+	//check all grpc is running:
+	grpcAddressMap = make(map[string]string)
+	grpcConns = make(map[string]pb.GRPCServicesClient)
+	grpcAddressMap["aut"] = os.Getenv("AUTH_IP")
+	grpcAddressMap["shop"] = os.Getenv("SHOP_IP")
+	grpcAddressMap["ord"] = os.Getenv("ORD_IP")
+
+	//implement concurrency
+	for name, add := range grpcAddressMap {
+		go func(name, add string) {
+			if len(add) < 10 {
+				fmt.Printf("%sIP is invalid:%s", name, add)
+				return
+			}
+			registerGrpc(ctx, name)
+		}(name, add)
+
+	}
+
+}
+
+func registerGrpc(ctx context.Context, name string) {
+	fmt.Printf("Register grpc %s at %s\n", name, grpcAddressMap[name])
+	conn, err := grpc.Dial(grpcAddressMap[name], grpc.WithInsecure())
+	//defer conn.Close()
+
+	if err != nil {
+		fmt.Println("Warning: can not call grpc auth %v", err)
+	} else {
+		grpcConns[name] = pb.NewGRPCServicesClient(conn)
+	}
 }
 
 func postHandler(c *gin.Context) {
@@ -68,34 +101,42 @@ func postHandler(c *gin.Context) {
 		strrt = c3mcommon.Fake64()
 	} else {
 		strrt = mycrypto.Encode(strrt, 8)
-		log.Debug(mycrypto.DecodeOld(strrt, 8))
 	}
 	c.String(http.StatusOK, strrt)
 }
 
-func callgRPC(address string, rpcRequest pb.RPCRequest) models.RequestResult {
-	// Set up a connection to the server.
-	conn, err := grpc.Dial(address, grpc.WithInsecure())
-	defer conn.Close()
+func callgRPC(name string, rpcRequest pb.RPCRequest) models.RequestResult {
 
-	rs := models.RequestResult{Error: "service not run"}
-	if err == nil && len(address) > 10 {
-		rpc := pb.NewGRPCServicesClient(conn)
-		// Contact the server and print out its response.
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
-		defer cancel()
-		r, err := rpc.Call(ctx, &rpcRequest)
-		if err != nil {
+	rs := models.RequestResult{Error: "service not run, please try again after 5 second"}
+	if _, ok := grpcConns[name]; !ok {
+		return rs
+	}
+	// Contact the server and print out its response.
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	defer cancel()
+	r, err := grpcConns[name].Call(ctx, &rpcRequest)
+	if err != nil {
+
+		if strings.Index(err.Error(), "Error while dialing dial") > 0 {
+			//delay time to reconnect grpc again
+			go func(name string) {
+				log.Debugf("wait to reconnect %s grpc", name)
+				time.Sleep(time.Second * 5)
+				registerGrpc(context.Background(), name)
+			}(name)
+		} else {
 			rs.Error = err.Error()
-			return rs
 		}
-
-		err = json.Unmarshal([]byte(r.Data), &rs)
-		if err != nil {
-			rs.Error = r.Data
-		}
+		return rs
 	}
 
+	err = json.Unmarshal([]byte(r.Data), &rs)
+	if err != nil {
+		rs.Error = r.Data
+	}
+	duration, _ := time.ParseDuration(r.GetTime())
+	log.Debugf("callgRPC %s query time:%s", name, duration)
+	log.Debugf("callgRPC %s query count:%d", name, r.GetQuery())
 	return rs
 }
 
@@ -141,11 +182,11 @@ func myRoute(c *gin.Context) models.RequestResult {
 		return models.RequestResult{Status: -1, Error: "Session not found"}
 	}
 	if RPCname == "aut" && requestAction == "l" {
-		return callgRPC(authIP, pb.RPCRequest{AppName: "admin-portal", Action: requestAction, Params: requestParams, Session: session, UserIP: userIP})
+		return callgRPC("aut", pb.RPCRequest{AppName: "admin-portal", Action: requestAction, Params: requestParams, Session: session, UserIP: userIP})
 	}
 
 	//always check login if RPCname not aut and create session
-	reply := callgRPC(authIP, pb.RPCRequest{AppName: "admin-portal", Action: "aut", Params: requestParams, Session: session, UserIP: userIP})
+	reply := callgRPC("aut", pb.RPCRequest{AppName: "admin-portal", Action: "aut", Params: requestParams, Session: session, UserIP: userIP})
 	if reply.Status != 1 {
 		return reply
 	}
@@ -166,8 +207,7 @@ func myRoute(c *gin.Context) models.RequestResult {
 	//begin gRPC call
 	log.Debugf("RPCname: %s", RPCname)
 	//time.Sleep(0 * time.Second)
-	RPCname = strings.ToUpper(RPCname)
-	grpcIP := os.Getenv(RPCname + "_IP")
-	return callgRPC(grpcIP, pb.RPCRequest{AppName: "admin-portal", Action: requestAction, Params: requestParams, Session: session, UserID: UserId, UserIP: userIP, ShopID: ShopId})
+
+	return callgRPC(RPCname, pb.RPCRequest{AppName: "admin-portal", Action: requestAction, Params: requestParams, Session: session, UserID: UserId, UserIP: userIP, ShopID: ShopId})
 
 }
