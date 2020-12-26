@@ -7,11 +7,12 @@ import (
 	"net"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/tidusant/c3m/common/log"
 
 	pb "github.com/tidusant/c3m/grpc/protoc"
-	rpch "github.com/tidusant/c3m/repo/cuahang"
+	"github.com/tidusant/c3m/repo/cuahang"
 	"github.com/tidusant/c3m/repo/models"
 
 	"context"
@@ -26,10 +27,15 @@ const (
 type service struct {
 	pb.UnimplementedGRPCServicesServer
 }
+type Auth struct {
+	rpch cuahang.Repo
+}
 
 func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (*pb.RPCResponse, error) {
+	start := time.Now()
 	resp := &pb.RPCResponse{Data: "Hello " + in.GetAppName(), RPCName: name, Version: ver}
 	rs := models.RequestResult{}
+	a := Auth{}
 	//get input data into user session
 	var usex models.UserSession
 	usex.Session = in.Session
@@ -39,11 +45,11 @@ func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (*pb.RPCResponse,
 	usex.Params = in.Params
 	usex.UserID, _ = primitive.ObjectIDFromHex(in.UserID)
 	if usex.Action == "l" {
-		rs = login(usex)
+		rs = a.login(usex)
 	} else if usex.Action == "lo" {
-		rs = logout(usex.Session)
+		rs = a.logout(usex.Session)
 	} else if usex.Action == "aut" {
-		rs = auth(usex)
+		rs = a.auth(usex)
 	} else {
 		//unknow action
 		return resp, nil
@@ -51,23 +57,24 @@ func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (*pb.RPCResponse,
 	//convert RequestResult into json
 	b, _ := json.Marshal(rs)
 	resp.Data = string(b)
+	resp.Query = int32(a.rpch.QueryCount)
+	resp.Time = time.Since(start).String()
 	return resp, nil
 }
 
 //auth: to authenticate user already login, for portal, return userid[+]shopid
-func auth(usex models.UserSession) models.RequestResult {
-	rs := rpch.GetLogin(usex.Session)
-	log.Debugf("auth user:%+v", rs)
+func (a *Auth) auth(usex models.UserSession) models.RequestResult {
+	rs := a.rpch.GetLogin(usex.Session)
 	if rs.UserId == primitive.NilObjectID {
 		return models.RequestResult{Status: -1, Error: "user not logged in"}
 	} else {
-		user := rpch.GetUserInfo(rs.UserId)
+		user := a.rpch.GetUserInfo(rs.UserId)
 		return models.RequestResult{Error: "", Status: 1, Data: `{"userid":"` + rs.UserId.Hex() + `","name":"` + user.Name + `","sex":"` + usex.Session + `","shop":"` + rs.ShopId.Hex() + `"}`}
 	}
 }
 
 //login user and update Session and IP in user_login. then return auth call to get userid[+]shopid
-func login(usex models.UserSession) models.RequestResult {
+func (a *Auth) login(usex models.UserSession) models.RequestResult {
 
 	args := strings.Split(usex.Params, ",")
 	if len(args) < 2 {
@@ -75,7 +82,7 @@ func login(usex models.UserSession) models.RequestResult {
 	}
 	username := args[0]
 	pass := args[1]
-	user := rpch.Login(username, pass, usex.Session, usex.UserIP)
+	user := a.rpch.Login(username, pass, usex.Session, usex.UserIP)
 	if user.Name != "" {
 
 		return models.RequestResult{
@@ -89,8 +96,8 @@ func login(usex models.UserSession) models.RequestResult {
 
 }
 
-func logout(session string) models.RequestResult {
-	rpch.Logout(session)
+func (a *Auth) logout(session string) models.RequestResult {
+	a.rpch.Logout(session)
 	return models.RequestResult{Error: "", Status: 1, Message: "Logout success"}
 
 }
