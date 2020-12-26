@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	pb "github.com/tidusant/c3m/grpc/protoc"
-	rpch "github.com/tidusant/c3m/repo/cuahang"
 	"github.com/tidusant/c3m/repo/models"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
@@ -24,19 +23,21 @@ var shopId = ""
 var shopChangeNoPermissionId = "5a52f89a7b4b30ed5ecfce9d" //shopname: Hoa Giay
 var shopChangeId = "59a275355f4aec1b026b6f5e"             //shopname: Colis
 var shopOriginId = "5955d130e761cf70ffb8e49b"             //shopname: demo
+var m *myRPC
+
 func setup() {
 	// Set up a connection to the server.
 	ctx = context.Background()
 	svc = &service{}
 	//get userid and shopid from session random
 	//NOTE: must run auth_test before to have data in db
-	userLogin := rpch.GetLogin(testsession)
+	userLogin := m.Rpch.GetLogin(testsession)
 
 	userId = userLogin.UserId.Hex()
 	shopId = userLogin.ShopId.Hex()
 	//change to demoshop
 	shopOriginIdObj, _ := primitive.ObjectIDFromHex(shopOriginId)
-	shopchange := rpch.UpdateShopLogin(testsession, shopOriginIdObj)
+	shopchange := m.Rpch.UpdateShopLogin(testsession, shopOriginIdObj)
 	if shopchange.ID.Hex() == "" {
 		fmt.Println("Test fail: User can not change to origin shop in setup")
 		os.Exit(0)
