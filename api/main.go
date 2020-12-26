@@ -75,7 +75,7 @@ func registerGrpc(ctx context.Context, name string) {
 	//defer conn.Close()
 
 	if err != nil {
-		fmt.Println("Warning: can not call grpc auth %v", err)
+		fmt.Printf("Warning: can not call grpc auth %v", err)
 	} else {
 		grpcConns[name] = pb.NewGRPCServicesClient(conn)
 	}
