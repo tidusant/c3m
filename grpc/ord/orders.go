@@ -139,19 +139,18 @@ func (m *myRPC) parseOrder(order models.Order, defaultstatus models.OrderStatus)
 	m.Rpch.SaveOrder(order)
 }
 func (m *myRPC) LoadAllOrderByStatus() models.RequestResult {
-
+	log.Debugf("params: %s", m.Usex.Params)
 	args := strings.Split(m.Usex.Params, ",")
 	statusid, _ := primitive.ObjectIDFromHex(args[0])
 	page := 1
-	pagesize := 100
+	pagesize := 10
 	if len(args) > 1 {
 		page, _ = strconv.Atoi(args[1])
 	}
 	if len(args) > 2 {
-		pagesize, _ = strconv.Atoi(args[2])
+		size, _ := strconv.Atoi(args[2])
+		pagesize = size
 	}
-
-	count := 1
 	searchterm := ""
 	if len(args) > 3 {
 		searchterm = args[3]
@@ -162,57 +161,41 @@ func (m *myRPC) LoadAllOrderByStatus() models.RequestResult {
 		}
 	}
 
-	count = int(m.Rpch.CountOrdersByStatus(m.Usex.ShopID, statusid, searchterm))
-	totalPage := (int)(math.Ceil(float64(count) / float64(pagesize)))
-	if page > totalPage {
-		page = totalPage
-	}
-
-	//update order from web
-
-	////orders := m.Rpch.GetOrdersByStatus(m.Usex.ShopID, "all", 0, pagesize, "")
-	////default status
-	//defaultstatus,_ := primitive.ObjectIDFromHex(status)
-	//if defaultstatus == primitive.NilObjectID {
-	//	return models.RequestResult{Status: 0, Error: "No Default Status for this shop"}
-	//}
-	//default shipper
-	//defaultshipper := m.Rpch.GetDefaultShipper(m.Usex.ShopID)
-	//all campaign
-	camps := m.Rpch.GetAllCampaigns(m.Usex.ShopID)
-	mapcamp := make(map[string]string)
-	for _, v := range camps {
-		mapcamp[v.ID.Hex()] = v.Name
-	}
-	//for _, order := range orders {
-	//	parseOrder(order, m.Usex, defaultstatus)
-	//}
-
-	orders := m.Rpch.GetOrdersByStatus(m.Usex.ShopID, statusid, page, pagesize, searchterm)
-	cuss := make(map[string]models.Customer)
-	for k, v := range orders {
-		//get cus
-		if _, ok := cuss[v.Phone]; !ok {
-			cuss[v.Phone] = m.Rpch.GetCusByPhone(v.Phone, m.Usex.ShopID.Hex())
+	start := time.Now()
+	orders, total, totalPage := m.GetAllOrder(statusid, page, pagesize, searchterm)
+	log.Debugf("GetAllOrder: %s", time.Since(start))
+	var cus []models.Customer
+	if len(orders) > 0 {
+		var phones []string
+		for _, v := range orders {
+			phones = append(phones, v.Phone)
 		}
-		orders[k].Name = cuss[v.Phone].Name
-		if campname, ok := mapcamp[orders[k].CampaignId]; ok {
-			orders[k].CampaignName = campname
+		//map customer
+		start = time.Now()
+		cus = m.Rpch.GetCustomerByPhones(phones, m.Usex.ShopID)
+		log.Debugf("GetCustomerByPhones: %s", time.Since(start))
+		start = time.Now()
+		cuscount := m.Rpch.CoundOrderByPhones(phones, m.Usex.ShopID)
+		log.Debugf("CoundOrderByPhones: %s", time.Since(start))
+		log.Debugf("phones count:%d", len(phones))
+		log.Debugf("cus count:%d", len(cus))
+		log.Debugf("cuscount count:%d", len(cuscount))
+		for k, _ := range cus {
+			cus[k].OrderCount = cuscount[cus[k].Phone]
 		}
-		//log.Debugf("after GetCusByPhone %+v",v)
-		orders[k].Email = cuss[v.Phone].Email
-		orders[k].City = cuss[v.Phone].City
-		orders[k].District = cuss[v.Phone].District
-		orders[k].Ward = cuss[v.Phone].Ward
-		orders[k].Address = cuss[v.Phone].Address
-		orders[k].CusNote = cuss[v.Phone].Note
-		orders[k].OrderCount = m.Rpch.CountOrderByCus(v.Phone, m.Usex.ShopID.Hex())
-		orders[k].SearchIndex = ""
-
 	}
-	info, _ := json.Marshal(orders)
-	strrt := `{"rs":` + string(info) + `,"pagecount":` + strconv.Itoa(totalPage) + `}`
-	//strrt = string(info)
+	rtdata := struct {
+		Total     int
+		Orders    []models.Order
+		Customers []models.Customer
+		PageCount int
+	}{Orders: orders, Customers: cus, Total: total, PageCount: totalPage}
+
+	info, err := json.Marshal(rtdata)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	strrt := string(info)
 	return models.RequestResult{Status: 1, Error: "", Data: strrt}
 }
 func (m *myRPC) LoadAllStatus() models.RequestResult {
