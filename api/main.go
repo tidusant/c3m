@@ -9,7 +9,6 @@ import (
 	"github.com/tidusant/c3m/common/mycrypto"
 	pb "github.com/tidusant/c3m/grpc/protoc"
 	"github.com/tidusant/c3m/repo/models"
-	rpsex "github.com/tidusant/c3m/repo/session"
 	"google.golang.org/grpc"
 
 	"os"
@@ -39,6 +38,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	connectGrpcs(ctx)
+	initCheckSession()
 
 	//start gin
 	router := gin.Default()
@@ -89,10 +89,17 @@ func postHandler(c *gin.Context) {
 	c.Header("Access-Control-Allow-Credentials", "true")
 
 	//check request url, only one unique url per second
-	if rpsex.CheckRequest(c.Request.URL.Path, c.Request.UserAgent(), c.Request.Referer(), c.Request.RemoteAddr, "POST") {
+
+	//if rpsex.CheckRequest(c.Request.URL.Path, c.Request.UserAgent(), c.Request.Referer(), c.Request.RemoteAddr, "POST") {
+	if CheckRequest(c.Request.URL.Path, c.Request.RemoteAddr) {
+
 		rs := myRoute(c)
+		start2 := time.Now()
+
 		b, _ := json.Marshal(rs)
 		strrt = string(b)
+
+		log.Debugf("marshall time:%s", time.Since(start2))
 	} else {
 		log.Debugf("request denied")
 	}
@@ -100,13 +107,15 @@ func postHandler(c *gin.Context) {
 	if strrt == "" {
 		strrt = c3mcommon.Fake64()
 	} else {
+		start := time.Now()
 		strrt = mycrypto.Encode(strrt, 8)
+		log.Debugf("encode time:%s", time.Since(start))
 	}
 	c.String(http.StatusOK, strrt)
 }
 
 func callgRPC(name string, rpcRequest pb.RPCRequest) models.RequestResult {
-
+	start := time.Now()
 	rs := models.RequestResult{Error: "service not run, please try again after 5 second"}
 	if _, ok := grpcConns[name]; !ok {
 		return rs
@@ -125,23 +134,25 @@ func callgRPC(name string, rpcRequest pb.RPCRequest) models.RequestResult {
 				registerGrpc(context.Background(), name)
 			}(name)
 		} else {
-			rs.Error = err.Error()
+			rs.Error = "Error while parsing response data:" + err.Error()
 		}
 		return rs
 	}
 
 	err = json.Unmarshal([]byte(r.Data), &rs)
 	if err != nil {
-		rs.Error = r.Data
+		rs.Error = "Parse data string from service Error."
 	}
 	duration, _ := time.ParseDuration(r.GetTime())
 	log.Debugf("callgRPC %s query time:%s", name, duration)
 	log.Debugf("callgRPC %s query count:%d", name, r.GetQuery())
+	log.Debugf("total callgRPC time:%s", time.Since(start))
 	return rs
 }
 
 func myRoute(c *gin.Context) models.RequestResult {
 	//get request name
+	start := time.Now()
 	name := c.Param("name")
 	name = name[1:] //remove  slash
 
@@ -158,6 +169,8 @@ func myRoute(c *gin.Context) models.RequestResult {
 
 	datargs := strings.Split(mycrypto.Decode(data), "|")
 	session := mycrypto.Decode(datargs[0])
+	log.Debugf("total decode time:%s", time.Since(start))
+
 	requestAction := ""
 	requestParams := ""
 	if len(datargs) > 1 {
@@ -172,42 +185,66 @@ func myRoute(c *gin.Context) models.RequestResult {
 	log.Debugf("RPCname:%s, action:%s", RPCname, requestAction)
 	if RPCname == "CreateSex" {
 		//create session string and save it into db
-		data = rpsex.CreateSession()
-		return models.RequestResult{Status: 1, Error: "", Data: data}
+		//data = rpsex.CreateSession()
+		return models.RequestResult{Status: 1, Error: "", Data: CreateSession()}
 	}
 
 	//check session
 
-	if !rpsex.CheckSession(session) {
+	//if !rpsex.CheckSession(session) {
+	if !CheckSession(session) {
 		return models.RequestResult{Status: -1, Error: "Session not found"}
 	}
+	log.Debugf("session found: %+v", SessionPool[session])
+
 	if RPCname == "aut" && requestAction == "l" {
-		return callgRPC("aut", pb.RPCRequest{AppName: "admin-portal", Action: requestAction, Params: requestParams, Session: session, UserIP: userIP})
+		reply := callgRPC("aut", pb.RPCRequest{AppName: "admin-portal", Action: requestAction, Params: requestParams, Session: session, UserIP: userIP})
+		if reply.Status == 1 {
+			var data map[string]string
+			c3mcommon.CheckError("parse login response", json.Unmarshal([]byte(reply.Data), &data))
+			//save userinfo int session
+			SessionPool[session].shopid = data["shopid"]
+			SessionPool[session].username = data["username"]
+			SessionPool[session].userid = data["userid"]
+			//remove userid & shopid in reply
+			reply.Data = fmt.Sprintf(`{"username":"%s"}`, data["username"])
+		}
+		return reply
 	}
 
 	//always check login if RPCname not aut and create session
-	reply := callgRPC("aut", pb.RPCRequest{AppName: "admin-portal", Action: "aut", Params: requestParams, Session: session, UserIP: userIP})
-	if reply.Status != 1 {
+	//reply := callgRPC("aut", pb.RPCRequest{AppName: "admin-portal", Action: "aut", Params: requestParams, Session: session, UserIP: userIP})
+	//if reply.Status != 1 {
+	//	return reply
+	//}
+	reply := models.RequestResult{Error: ""}
+	sex := GetSession(session)
+	if sex == nil {
+		reply.Error = "No session found"
 		return reply
 	}
-	log.Debugf("authentication: %+v", reply)
-	//get logininfo: from check login in format: userid[+]shopid
-	var rs map[string]string
-	json.Unmarshal([]byte(reply.Data), &rs)
 
-	ShopId := rs["shop"]
-	UserId := rs["userid"]
+	//some specific function relate to Session
+	if RPCname == "shop" && requestAction == "cs" {
+		//change shop
+		reply = callgRPC(RPCname, pb.RPCRequest{AppName: "admin-portal", Action: requestAction, Params: requestParams, Session: session, UserID: sex.userid, UserIP: userIP, ShopID: sex.shopid})
+		if reply.Status == 1 {
+			//update session
+			SessionPool[session].shopid = reply.Data
+		}
+		log.Debugf("cs return:%+v", reply)
+	} else if RPCname == "aut" && requestAction == "t" {
+		reply = models.RequestResult{Status: 1, Error: "", Data: `{"sex":"` + session + `","username":"` + sex.username + `","shop":"` + sex.shopid + `"}`}
+		log.Debugf("t return:%+v", reply)
+	} else {
 
-	//test function
-	if requestAction == "t" {
-		return models.RequestResult{Status: 1, Error: "", Data: `{"sex":"` + session + `","name":"` + rs["name"] + `","shop":"` + ShopId + `"}`}
+		//normal gRPC call
+		log.Debugf("RPCname: %s", RPCname)
+		//time.Sleep(0 * time.Second)
 
+		reply = callgRPC(RPCname, pb.RPCRequest{AppName: "admin-portal", Action: requestAction, Params: requestParams, Session: session, UserID: sex.userid, UserIP: userIP, ShopID: sex.shopid})
+		log.Debugf("total time:%s", time.Since(start))
 	}
 
-	//begin gRPC call
-	log.Debugf("RPCname: %s", RPCname)
-	//time.Sleep(0 * time.Second)
-
-	return callgRPC(RPCname, pb.RPCRequest{AppName: "admin-portal", Action: requestAction, Params: requestParams, Session: session, UserID: UserId, UserIP: userIP, ShopID: ShopId})
-
+	return reply
 }
