@@ -10,7 +10,7 @@ type UserSession struct {
 	UserID  primitive.ObjectID
 	Action  string
 	Params  string
-	Shop    Shop
+	ShopID  primitive.ObjectID
 	UserIP  string
 }
 type User struct {
@@ -21,6 +21,7 @@ type User struct {
 	Active int32              `bson:"active"`
 	Group  string             `bson:"group"`
 	Config UserConfig         `bson:"config"`
+	ShopId primitive.ObjectID `bson:"shopid"`
 }
 
 type UserConfig struct {
