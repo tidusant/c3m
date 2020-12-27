@@ -606,24 +606,26 @@ func (m *myRPC) LoadAll() models.RequestResult {
 	start = time.Now()
 	orders, total, totalPage := m.GetAllOrder(statusid, page, pagesize, searchterm)
 	log.Debugf("GetAllOrder: %s", time.Since(start))
-	var phones []string
-	for _, v := range orders {
-		phones = append(phones, v.Phone)
+	var cus []models.Customer
+	if len(orders) > 0 {
+		var phones []string
+		for _, v := range orders {
+			phones = append(phones, v.Phone)
+		}
+		//map customer
+		start = time.Now()
+		cus = m.Rpch.GetCustomerByPhones(phones, m.Usex.Shop.ID)
+		log.Debugf("GetCustomerByPhones: %s", time.Since(start))
+		start = time.Now()
+		cuscount := m.Rpch.CoundOrderByPhones(phones, m.Usex.Shop.ID)
+		log.Debugf("CoundOrderByPhones: %s", time.Since(start))
+		log.Debugf("phones count:%d", len(phones))
+		log.Debugf("cus count:%d", len(cus))
+		log.Debugf("cuscount count:%d", len(cuscount))
+		for k, _ := range cus {
+			cus[k].OrderCount = cuscount[cus[k].Phone]
+		}
 	}
-	//map customer
-	start = time.Now()
-	cus := m.Rpch.GetCustomerByPhones(phones, m.Usex.Shop.ID)
-	log.Debugf("GetCustomerByPhones: %s", time.Since(start))
-	start = time.Now()
-	cuscount := m.Rpch.CoundOrderByPhones(phones, m.Usex.Shop.ID)
-	log.Debugf("CoundOrderByPhones: %s", time.Since(start))
-	log.Debugf("phones count:%d", len(phones))
-	log.Debugf("cus count:%d", len(cus))
-	log.Debugf("cuscount count:%d", len(cuscount))
-	for k, _ := range cus {
-		cus[k].OrderCount = cuscount[cus[k].Phone]
-	}
-
 	rtdata := struct {
 		Total     int
 		Status    []models.OrderStatus
