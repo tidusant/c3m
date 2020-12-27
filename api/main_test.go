@@ -39,6 +39,7 @@ func decodeResponse(requeststring string, data string) (rs models.RequestResult,
 	w := httptest.NewRecorder()
 
 	// Perform the request
+
 	r.ServeHTTP(w, req)
 
 	// Check to see if the response was what you expected
@@ -75,6 +76,7 @@ func setup() {
 	gin.SetMode(gin.TestMode)
 	// Setup your router, just like you did in your main function, and
 	// register your routes
+	initCheckSession()
 	r = gin.Default()
 	r.POST("/*name", postHandler)
 }
