@@ -59,7 +59,7 @@ func (m *MainRPC) ReturnRespone(rs models.RequestResult) *pb.RPCResponse {
 	m.resp.Time = time.Since(m.start).String()
 	log.Debugf("query count :%d", m.resp.Query)
 	log.Debugf("query time :%s", m.resp.Time)
-	log.Debugf("response:%+v", rs)
+	//log.Debugf("response:%+v", rs)
 	return m.resp
 }
 
