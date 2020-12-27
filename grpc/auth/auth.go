@@ -84,12 +84,16 @@ func (a *Auth) login(usex models.UserSession) models.RequestResult {
 	pass := args[1]
 	user := a.rpch.Login(username, pass, usex.Session, usex.UserIP)
 	if user.Name != "" {
-
+		//get shop default
+		if user.ShopId == primitive.NilObjectID {
+			shop := a.rpch.GetShopDefault(user.ID)
+			user.ShopId = shop.ID
+		}
 		return models.RequestResult{
 			Error:   "",
 			Status:  1,
 			Message: "logged in",
-			Data:    `{"name":"` + user.Name + `"}`}
+			Data:    `{"username":"` + user.Name + `","userid":"` + user.ID.Hex() + `","shopid":"` + user.ShopId.Hex() + `"}`}
 
 	}
 	return models.RequestResult{Error: "Login failed"}

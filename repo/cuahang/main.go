@@ -43,9 +43,9 @@ func CreateBuild(object, objectid, data string, usex models.UserSession) string 
 	bs.Object = object
 	bs.ObjectId = objectid
 	bs.Data = data
-	bs.ShopConfigs = usex.Shop.Config
-	bs.TemplateCode = usex.Shop.Theme
-	bs.ShopId = usex.Shop.ID.Hex()
+	//bs.ShopConfigs = usex.Shop.Config
+	//bs.TemplateCode = usex.Shop.Theme
+	//bs.ShopId = usex.Shop.ID.Hex()
 	b, _ := json.Marshal(bs)
 	c3mcommon.RequestBuildServiceAsync(request, "POST", string(b))
 
