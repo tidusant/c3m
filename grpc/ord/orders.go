@@ -93,7 +93,7 @@ func (m *myRPC) parseOrder(order models.Order, defaultstatus models.OrderStatus)
 		code := orderc[:3]
 		orderc = orderc[3:]
 		//get prod
-		prod := m.Rpch.GetProdByCode(m.Usex.Shop.ID, code)
+		prod := m.Rpch.GetProdByCode(m.Usex.ShopID, code)
 		if prod.Code == "" {
 			//prod not found
 			break
@@ -162,7 +162,7 @@ func (m *myRPC) LoadAllOrderByStatus() models.RequestResult {
 		}
 	}
 
-	count = int(m.Rpch.CountOrdersByStatus(m.Usex.Shop.ID, statusid, searchterm))
+	count = int(m.Rpch.CountOrdersByStatus(m.Usex.ShopID, statusid, searchterm))
 	totalPage := (int)(math.Ceil(float64(count) / float64(pagesize)))
 	if page > totalPage {
 		page = totalPage
@@ -170,16 +170,16 @@ func (m *myRPC) LoadAllOrderByStatus() models.RequestResult {
 
 	//update order from web
 
-	////orders := m.Rpch.GetOrdersByStatus(m.Usex.Shop.ID, "all", 0, pagesize, "")
+	////orders := m.Rpch.GetOrdersByStatus(m.Usex.ShopID, "all", 0, pagesize, "")
 	////default status
 	//defaultstatus,_ := primitive.ObjectIDFromHex(status)
 	//if defaultstatus == primitive.NilObjectID {
 	//	return models.RequestResult{Status: 0, Error: "No Default Status for this shop"}
 	//}
 	//default shipper
-	//defaultshipper := m.Rpch.GetDefaultShipper(m.Usex.Shop.ID)
+	//defaultshipper := m.Rpch.GetDefaultShipper(m.Usex.ShopID)
 	//all campaign
-	camps := m.Rpch.GetAllCampaigns(m.Usex.Shop.ID)
+	camps := m.Rpch.GetAllCampaigns(m.Usex.ShopID)
 	mapcamp := make(map[string]string)
 	for _, v := range camps {
 		mapcamp[v.ID.Hex()] = v.Name
@@ -188,12 +188,12 @@ func (m *myRPC) LoadAllOrderByStatus() models.RequestResult {
 	//	parseOrder(order, m.Usex, defaultstatus)
 	//}
 
-	orders := m.Rpch.GetOrdersByStatus(m.Usex.Shop.ID, statusid, page, pagesize, searchterm)
+	orders := m.Rpch.GetOrdersByStatus(m.Usex.ShopID, statusid, page, pagesize, searchterm)
 	cuss := make(map[string]models.Customer)
 	for k, v := range orders {
 		//get cus
 		if _, ok := cuss[v.Phone]; !ok {
-			cuss[v.Phone] = m.Rpch.GetCusByPhone(v.Phone, m.Usex.Shop.ID.Hex())
+			cuss[v.Phone] = m.Rpch.GetCusByPhone(v.Phone, m.Usex.ShopID.Hex())
 		}
 		orders[k].Name = cuss[v.Phone].Name
 		if campname, ok := mapcamp[orders[k].CampaignId]; ok {
@@ -206,7 +206,7 @@ func (m *myRPC) LoadAllOrderByStatus() models.RequestResult {
 		orders[k].Ward = cuss[v.Phone].Ward
 		orders[k].Address = cuss[v.Phone].Address
 		orders[k].CusNote = cuss[v.Phone].Note
-		orders[k].OrderCount = m.Rpch.CountOrderByCus(v.Phone, m.Usex.Shop.ID.Hex())
+		orders[k].OrderCount = m.Rpch.CountOrderByCus(v.Phone, m.Usex.ShopID.Hex())
 		orders[k].SearchIndex = ""
 
 	}
@@ -218,7 +218,7 @@ func (m *myRPC) LoadAllOrderByStatus() models.RequestResult {
 func (m *myRPC) LoadAllStatus() models.RequestResult {
 
 	//default status
-	status := m.Rpch.GetAllOrderStatus(m.Usex.Shop.ID)
+	status := m.Rpch.GetAllOrderStatus(m.Usex.ShopID)
 
 	info, _ := json.Marshal(status)
 
@@ -228,7 +228,7 @@ func (m *myRPC) LoadAllStatus() models.RequestResult {
 func (m *myRPC) LoadAllStatusCount() models.RequestResult {
 
 	//default status
-	status := m.Rpch.GetAllOrderStatus(m.Usex.Shop.ID)
+	status := m.Rpch.GetAllOrderStatus(m.Usex.ShopID)
 	type orderStat struct {
 		Id      string `bson:"id"`
 		Name    string `bson:"name"`
@@ -240,7 +240,7 @@ func (m *myRPC) LoadAllStatusCount() models.RequestResult {
 	var lstOrderStat []orderStat
 	defaultstat := ""
 	for k, v := range status {
-		status[k].OrderCount = int(m.Rpch.CountOrdersByStatus(m.Usex.Shop.ID, v.ID, ""))
+		status[k].OrderCount = int(m.Rpch.CountOrdersByStatus(m.Usex.ShopID, v.ID, ""))
 		if status[k].Default {
 			defaultstat = status[k].ID.Hex()
 		}
@@ -308,7 +308,7 @@ func (m *myRPC) UpdateOrderStatus() models.RequestResult {
 		orderid, _ := primitive.ObjectIDFromHex(info[0])
 
 		//check cancel ghtk status:
-		status := m.Rpch.GetStatusByID(changestatusid, m.Usex.Shop.ID)
+		status := m.Rpch.GetStatusByID(changestatusid, m.Usex.ShopID)
 		ghtkstatussync := status.PartnerStatus["ghtk"]
 		if ghtkstatussync != nil {
 			for _, statcode := range ghtkstatussync {
@@ -318,12 +318,12 @@ func (m *myRPC) UpdateOrderStatus() models.RequestResult {
 			}
 		}
 		//check stock
-		order := m.Rpch.GetOrderByID(orderid, m.Usex.Shop.ID)
+		order := m.Rpch.GetOrderByID(orderid, m.Usex.ShopID)
 		if order.Status == "" {
 			return models.RequestResult{Status: 0, Error: "order not found", Data: ""}
 		}
 		statusid, _ := primitive.ObjectIDFromHex(order.Status)
-		oldstat := m.Rpch.GetStatusByID(statusid, m.Usex.Shop.ID)
+		oldstat := m.Rpch.GetStatusByID(statusid, m.Usex.ShopID)
 		if oldstat.Export != status.Export {
 			//update stock
 			sign := 1
@@ -332,7 +332,7 @@ func (m *myRPC) UpdateOrderStatus() models.RequestResult {
 			}
 			var exportitems []models.ExportItem
 			for _, v := range order.Items {
-				prod := m.Rpch.GetProdByCode(m.Usex.Shop.ID, v.ProdCode)
+				prod := m.Rpch.GetProdByCode(m.Usex.ShopID, v.ProdCode)
 				var newexportitem models.ExportItem
 				for _, prop := range prod.Properties {
 					if prop.Code == v.Code {
@@ -345,7 +345,7 @@ func (m *myRPC) UpdateOrderStatus() models.RequestResult {
 						newexportitem.Code = v.ProdCode
 						newexportitem.ItemCode = v.Code
 						newexportitem.Num = v.Num * sign
-						newexportitem.ShopId = m.Usex.Shop.ID.Hex()
+						newexportitem.ShopId = m.Usex.ShopID.Hex()
 						break
 					}
 				}
@@ -357,7 +357,7 @@ func (m *myRPC) UpdateOrderStatus() models.RequestResult {
 
 			}
 		}
-		m.Rpch.UpdateOrderStatus(m.Usex.Shop.ID, changestatusid, orderid.Hex())
+		m.Rpch.UpdateOrderStatus(m.Usex.ShopID, changestatusid, orderid.Hex())
 
 	}
 	return models.RequestResult{Status: 1, Error: "", Message: cancelPartner, Data: ""}
@@ -375,7 +375,7 @@ func (m *myRPC) SaveStatus() models.RequestResult {
 	//check old status
 	oldstat := status
 	if oldstat.ID != primitive.NilObjectID {
-		oldstat = m.Rpch.GetStatusByID(status.ID, m.Usex.Shop.ID)
+		oldstat = m.Rpch.GetStatusByID(status.ID, m.Usex.ShopID)
 		oldstat.Title = status.Title
 		oldstat.Color = status.Color
 		oldstat.Default = status.Default
@@ -384,12 +384,12 @@ func (m *myRPC) SaveStatus() models.RequestResult {
 		oldstat.PartnerStatus = status.PartnerStatus
 	} else {
 		oldstat.UserId = m.Usex.UserID.Hex()
-		oldstat.ShopId = m.Usex.Shop.ID.Hex()
+		oldstat.ShopId = m.Usex.ShopID.Hex()
 	}
 
 	//check default
 	if oldstat.Default == true {
-		m.Rpch.UnSetStatusDefault(m.Usex.Shop.ID)
+		m.Rpch.UnSetStatusDefault(m.Usex.ShopID)
 	}
 	if oldstat.Color == "" {
 		oldstat.Color = "ffffff"
@@ -404,7 +404,7 @@ func (m *myRPC) SaveStatus() models.RequestResult {
 func (m *myRPC) DeleteOrderStatus() models.RequestResult {
 	//get stat
 	statusid, _ := primitive.ObjectIDFromHex(m.Usex.Params)
-	stat := m.Rpch.GetStatusByID(statusid, m.Usex.Shop.ID)
+	stat := m.Rpch.GetStatusByID(statusid, m.Usex.ShopID)
 	if stat.ID == primitive.NilObjectID {
 		return models.RequestResult{Status: 0, Error: "Status not found"}
 
@@ -426,7 +426,7 @@ func (m *myRPC) DeleteOrderStatus() models.RequestResult {
 }
 
 func (m *myRPC) UpdateOrder() models.RequestResult {
-	shop := m.Rpch.GetShopById(m.Usex.UserID, m.Usex.Shop.ID)
+	shop := m.Rpch.GetShopById(m.Usex.UserID, m.Usex.ShopID)
 	if shop.Status == 0 {
 		return models.RequestResult{Status: 0, Error: "Shop is disabled"}
 
@@ -445,25 +445,25 @@ func (m *myRPC) UpdateOrder() models.RequestResult {
 			mapolditems[v.Code] = v
 		}
 	} else {
-		oldorder.ShopId = m.Usex.Shop.ID.Hex()
+		oldorder.ShopId = m.Usex.ShopID.Hex()
 		oldorder.ID = primitive.NewObjectID()
 		oldorder.Created = time.Now().Unix()
 		oldorder.Modified = oldorder.Created
 	}
 
 	//all campaign
-	camps := m.Rpch.GetAllCampaigns(m.Usex.Shop.ID)
+	camps := m.Rpch.GetAllCampaigns(m.Usex.ShopID)
 	mapcamp := make(map[string]string)
 	for _, v := range camps {
 		mapcamp[v.ID.Hex()] = v.Name
 	}
 	//all shipper
-	//shippers := m.Rpch.GetAllShipper(m.Usex.Shop.ID)
+	//shippers := m.Rpch.GetAllShipper(m.Usex.ShopID)
 	//mapshipper := make(map[string]string)
 	//for _, v := range shippers {
 	//	mapshipper[v.ID] = v.Name
 	//}
-	stats := m.Rpch.GetAllOrderStatus(m.Usex.Shop.ID)
+	stats := m.Rpch.GetAllOrderStatus(m.Usex.ShopID)
 	mapstat := make(map[string]models.OrderStatus)
 	for _, v := range stats {
 		mapstat[v.ID.Hex()] = v
@@ -480,7 +480,7 @@ func (m *myRPC) UpdateOrder() models.RequestResult {
 				olditemcount = mapolditems[v.Code].Num
 			}
 			var newexportitem models.ExportItem
-			prod := m.Rpch.GetProdByCode(m.Usex.Shop.ID, v.ProdCode)
+			prod := m.Rpch.GetProdByCode(m.Usex.ShopID, v.ProdCode)
 			for _, prop := range prod.Properties {
 				if prop.Code == v.Code {
 					prop.Stock -= v.Num - olditemcount
@@ -493,7 +493,7 @@ func (m *myRPC) UpdateOrder() models.RequestResult {
 					newexportitem.ItemCode = v.Code
 					newexportitem.Num = v.Num
 
-					newexportitem.ShopId = m.Usex.Shop.ID.Hex()
+					newexportitem.ShopId = m.Usex.ShopID.Hex()
 					break
 				}
 			}
@@ -505,7 +505,7 @@ func (m *myRPC) UpdateOrder() models.RequestResult {
 		var oldexportitems []models.ExportItem
 		for _, v := range mapolditems {
 			var old models.ExportItem
-			old.ShopId = m.Usex.Shop.ID.Hex()
+			old.ShopId = m.Usex.ShopID.Hex()
 			old.Code = v.ProdCode
 			old.ItemCode = v.Code
 			old.Num = -v.Num
@@ -601,7 +601,7 @@ func (m *myRPC) LoadAll() models.RequestResult {
 		}
 	}
 	start := time.Now()
-	status := m.Rpch.GetAllOrderStatus(m.Usex.Shop.ID)
+	status := m.Rpch.GetAllOrderStatus(m.Usex.ShopID)
 	log.Debugf("GetAllOrderStatus: %s", time.Since(start))
 	start = time.Now()
 	orders, total, totalPage := m.GetAllOrder(statusid, page, pagesize, searchterm)
@@ -614,10 +614,10 @@ func (m *myRPC) LoadAll() models.RequestResult {
 		}
 		//map customer
 		start = time.Now()
-		cus = m.Rpch.GetCustomerByPhones(phones, m.Usex.Shop.ID)
+		cus = m.Rpch.GetCustomerByPhones(phones, m.Usex.ShopID)
 		log.Debugf("GetCustomerByPhones: %s", time.Since(start))
 		start = time.Now()
-		cuscount := m.Rpch.CoundOrderByPhones(phones, m.Usex.Shop.ID)
+		cuscount := m.Rpch.CoundOrderByPhones(phones, m.Usex.ShopID)
 		log.Debugf("CoundOrderByPhones: %s", time.Since(start))
 		log.Debugf("phones count:%d", len(phones))
 		log.Debugf("cus count:%d", len(cus))
@@ -645,12 +645,12 @@ func (m *myRPC) LoadAll() models.RequestResult {
 
 func (m *myRPC) GetAllOrder(statusid primitive.ObjectID, page, pagesize int, searchterm string) (orders []models.Order, total int, totalPage int) {
 
-	total = int(m.Rpch.CountOrdersByStatus(m.Usex.Shop.ID, statusid, searchterm))
+	total = int(m.Rpch.CountOrdersByStatus(m.Usex.ShopID, statusid, searchterm))
 	totalPage = (int)(math.Ceil(float64(total) / float64(pagesize)))
 	if page > totalPage {
 		page = totalPage
 	}
-	//camps := m.Rpch.GetAllCampaigns(m.Usex.Shop.ID)
+	//camps := m.Rpch.GetAllCampaigns(m.Usex.ShopID)
 	//mapcamp := make(map[string]string)
 	//for _, v := range camps {
 	//	mapcamp[v.ID.Hex()] = v.Name
@@ -659,7 +659,7 @@ func (m *myRPC) GetAllOrder(statusid primitive.ObjectID, page, pagesize int, sea
 	////	parseOrder(order, m.Usex, defaultstatus)
 	////}
 
-	orders = m.Rpch.GetOrdersByStatus(m.Usex.Shop.ID, statusid, page, pagesize, searchterm)
+	orders = m.Rpch.GetOrdersByStatus(m.Usex.ShopID, statusid, page, pagesize, searchterm)
 	return
 }
 func main() {
