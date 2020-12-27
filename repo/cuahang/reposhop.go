@@ -89,7 +89,7 @@ func (r *Repo) GetShopById(userid, shopid primitive.ObjectID) models.Shop {
 	cond := bson.M{"_id": shopid}
 	//cond := bson.M{"users": userid}
 	cond["users"] = userid
-	log.Debugf("Loadshopbyid:%s,%s", userid, shopid)
+	log.Debugf("GetShopById:%s,%s", userid, shopid)
 
 	err := coluser.FindOne(ctx, cond).Decode(&shop)
 	r.QueryCount++
@@ -123,24 +123,19 @@ func (r *Repo) GetShopLimits(shopid primitive.ObjectID) []models.ShopLimit {
 	r.QueryTime += time.Since(start)
 	return rs
 }
-func (r *Repo) GetOtherShopById(userid, shopid primitive.ObjectID) []models.Shop {
+func (r *Repo) GetShopsByUserId(userid primitive.ObjectID) []models.Shop {
 	start := time.Now()
 	coluser := db.Collection("addons_shops")
 	var shops []models.Shop
-	if shopid == primitive.NilObjectID {
-		return shops
-	}
 
-	cond := bson.M{"_id": bson.M{"$ne": shopid}}
-
+	cond := bson.M{"users": userid}
 	//if userid != "594f665df54c58a2udfl54d3er" && userid != viper.GetString("config.webuserapi") {
-	cond["users"] = userid
 
 	//}
 	cursor, err := coluser.Find(ctx, cond)
 	r.QueryCount++
 	if err = cursor.All(ctx, &shops); err != nil {
-		c3mcommon.CheckError("GetOtherShopById", err)
+		c3mcommon.CheckError("GetShopsByUserId", err)
 	}
 
 	r.QueryTime += time.Since(start)

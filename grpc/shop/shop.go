@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/tidusant/c3m/common/c3mcommon"
 	"github.com/tidusant/c3m/common/log"
 	maingrpc "github.com/tidusant/c3m/grpc"
 	pb "github.com/tidusant/c3m/grpc/protoc"
@@ -62,6 +61,7 @@ func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (*pb.RPCResponse,
 
 	//if there is other repo than rpch then accummulate query count here
 	//m.QueryCount+=m.Rpch.QueryCount
+
 	return m.ReturnRespone(rs), nil
 
 }
@@ -79,43 +79,24 @@ type ConfigItem struct {
 
 func (m *myRPC) loadshopinfo() models.RequestResult {
 
-	strrt := `{"Shop":`
-	b, _ := json.Marshal(m.Usex.Shop)
-	strrt += string(b)
-
-	//get langs info
-	strrt += `,"Languages":[`
-	for _, lang := range m.Usex.Shop.Config.Langs {
-		strrt += `{"Code":"` + lang + `","Name":"` + c3mcommon.GetLangnameByCode(lang) + `","Flag":"` + c3mcommon.Code2Flag(lang) + `"},`
-	}
-	if len(m.Usex.Shop.Config.Langs) > 0 {
-		strrt = strrt[:len(strrt)-1] + `]`
-	}
-	b, _ = json.Marshal(m.Usex.Shop.Config)
-	strrt += `,"ShopConfigs":` + string(b)
+	strrt := `{"DefaultShopId":"` + m.Usex.ShopID.Hex() + `","Shops":`
 
 	//maxfileupload
 	//strrt += `,"MaxFileUpload":` + strconv.Itoa(cuahang.GetShopLimitbyKey(m.Usex.Shop.ID, "maxfileupload"))
 	//strrt += `,"MaxSizeUpload":` + strconv.Itoa(cuahang.GetShopLimitbyKey(m.Usex.Shop.ID, "maxsizeupload"))
 
 	//orther shop
-	otherShops := m.Rpch.GetOtherShopById(m.Usex.UserID, m.Usex.Shop.ID)
+	Shops := m.Rpch.GetShopsByUserId(m.Usex.UserID)
 
-	strrt += `,"Others":[`
-	for _, shop := range otherShops {
+	strrt += `[`
+	for _, shop := range Shops {
 		strrt += `{"Name":"` + shop.Name + `","ID":"` + shop.ID.Hex() + `"},`
 	}
-	if len(otherShops) > 0 {
+	if len(Shops) > 0 {
 		strrt = strrt[:len(strrt)-1] + `]`
 	} else {
 		strrt += `]`
 	}
-
-	//get user info
-
-	user := m.Rpch.GetUserInfo(m.Usex.UserID)
-
-	strrt += `,"User":{"Name":"` + user.Name + `"}`
 	strrt += "}"
 	return models.RequestResult{Status: 1, Error: "", Message: "", Data: strrt}
 
@@ -123,14 +104,13 @@ func (m *myRPC) loadshopinfo() models.RequestResult {
 
 func (m *myRPC) changeShop() models.RequestResult {
 	shopidObj, _ := primitive.ObjectIDFromHex(m.Usex.Params)
-	shopchange := m.Rpch.UpdateShopLogin(m.Usex.Session, shopidObj)
+	shopchange := m.Rpch.GetShopById(m.Usex.UserID, shopidObj)
 	if shopchange.ID == primitive.NilObjectID {
 		return models.RequestResult{Error: "Change shop fail"}
-
 	}
 	//change shopid
-	m.Usex.Shop = shopchange
-	return m.loadshopinfo()
+	m.Usex.ShopID = shopchange.ID
+	return models.RequestResult{Status: 1, Data: shopchange.ID.Hex()}
 }
 func (m *myRPC) configSave() models.RequestResult {
 	//var config ConfigViewData
@@ -198,7 +178,7 @@ func (m *myRPC) configGetAll() models.RequestResult {
 }
 func (m *myRPC) getShopLimits() models.RequestResult {
 
-	limits := m.Rpch.GetShopLimits(m.Usex.Shop.ID)
+	limits := m.Rpch.GetShopLimits(m.Usex.ShopID)
 
 	b, _ := json.Marshal(limits)
 	return models.RequestResult{Status: 1, Error: "", Data: string(b)}

@@ -3,8 +3,6 @@ package cuahang
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"go.mongodb.org/mongo-driver/mongo/options"
-
 	"github.com/tidusant/c3m/common/c3mcommon"
 	"github.com/tidusant/c3m/common/log"
 	"github.com/tidusant/c3m/repo/models"
@@ -41,6 +39,7 @@ func (r *Repo) GetLogin(session string) models.UserLogin {
 		if rs.ShopId == primitive.NilObjectID {
 
 			shop := r.GetShopDefault(rs.UserId)
+			r.QueryCount++
 			rs.ShopId = shop.ID
 			filter := bson.M{"userid": rs.UserId}
 			update := bson.M{"$set": bson.M{"shopid": rs.ShopId}}
@@ -93,32 +92,32 @@ func (r *Repo) Login(user, pass, session, userIP string) models.User {
 	r.QueryCount++
 	c3mcommon.CheckError("error query user", err)
 	log.Debugf("user result %v", result)
-	if result.Name != "" {
-		coluserlogin := db.Collection("addons_userlogin")
-		var userlogin models.UserLogin
-		err := coluserlogin.FindOne(ctx, bson.M{"userid": result.ID}).Decode(&userlogin)
-		r.QueryCount++
-		if c3mcommon.CheckError("Login FindOne", err) {
-			userlogin.UserId = result.ID
-
-			userlogin.LastLogin = time.Now().UTC()
-			userlogin.LoginIP = userIP
-			userlogin.Session = session
-
-			opts := options.Update().SetUpsert(true)
-			filter := bson.M{"userid": userlogin.UserId}
-			update := bson.M{"$set": bson.M{
-				"last":    userlogin.LastLogin,
-				"ip":      userlogin.LoginIP,
-				"session": userlogin.Session,
-			}}
-
-			_, err := coluserlogin.UpdateOne(ctx, filter, update, opts)
-			r.QueryCount++
-			c3mcommon.CheckError("Upsert login", err)
-		}
-
-	}
+	//if result.Name != "" {
+	//	coluserlogin := db.Collection("addons_userlogin")
+	//	var userlogin models.UserLogin
+	//	err := coluserlogin.FindOne(ctx, bson.M{"userid": result.ID}).Decode(&userlogin)
+	//	r.QueryCount++
+	//	if c3mcommon.CheckError("Login FindOne", err) {
+	//		userlogin.UserId = result.ID
+	//
+	//		userlogin.LastLogin = time.Now().UTC()
+	//		userlogin.LoginIP = userIP
+	//		userlogin.Session = session
+	//
+	//		opts := options.Update().SetUpsert(true)
+	//		filter := bson.M{"userid": userlogin.UserId}
+	//		update := bson.M{"$set": bson.M{
+	//			"last":    userlogin.LastLogin,
+	//			"ip":      userlogin.LoginIP,
+	//			"session": userlogin.Session,
+	//		}}
+	//
+	//		_, err := coluserlogin.UpdateOne(ctx, filter, update, opts)
+	//		r.QueryCount++
+	//		c3mcommon.CheckError("Upsert login", err)
+	//	}
+	//
+	//}
 	r.QueryTime += time.Since(start)
 	return result
 }
