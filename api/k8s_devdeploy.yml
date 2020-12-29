@@ -42,7 +42,9 @@ spec:
               value: "c3m-grpc-shop-service:8902"
             - name: ORD_IP
               value: "c3m-grpc-ord-service:8903"
-            - name: ORD_IP
+            - name: PAGE_IP
+              value: "c3m-grpc-page-service:8904"
+            - name: SESSION_IP
               value: "c3m-grpc-session-service"
               #value: "c3m-grpc-ord-service.colis-dev.svc.cluster.local"
 ---
