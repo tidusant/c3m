@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	name string = "ord"
+	name string = "page"
 	ver  string = "1"
 )
 
@@ -41,13 +41,15 @@ func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (*pb.RPCResponse,
 	rs := models.RequestResult{Error: m.InitUsex(ctx, in, name, ver)}
 	//if not error then continue call func
 	if rs.Error == "" {
-
 		if m.Usex.Action == "s" {
 			rs = m.LoadAllPage()
 		} else if m.Usex.Action == "l" {
 			rs = m.LoadPage()
 		} else if m.Usex.Action == "la" {
 			rs = m.LoadAllPage()
+		} else {
+			//unknow action
+			return m.ReturnNilRespone(), nil
 		}
 	}
 	return m.ReturnRespone(rs), nil
