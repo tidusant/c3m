@@ -45,7 +45,7 @@ spec:
             - name: PAGE_IP
               value: "c3m-grpc-page-service:8904"
             - name: SESSION_IP
-              value: "c3m-grpc-session-service"
+              value: "c3m-grpc-session-service:80"
               #value: "c3m-grpc-ord-service.colis-dev.svc.cluster.local"
 ---
 kind: Service
