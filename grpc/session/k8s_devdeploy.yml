@@ -50,5 +50,5 @@ spec:
   ports:
     - name: c3m-grpc-session-port
       protocol: TCP
-      port: 80
+      port: 8864
       nodePort: 30864 #must be between 30000 - 32767
