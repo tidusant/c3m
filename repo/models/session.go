@@ -1,11 +1,12 @@
 package models
 
 import (
-	"gopkg.in/mgo.v2/bson"
+	"time"
 )
 
 type Session struct {
-	ID      bson.ObjectId `bson:"_id,omitempty"`
-	Uid     string        `bson:"uid"`
-	Expired int64         `bson:"expired"`
+	Time     time.Time
+	UserID   string
+	ShopID   string
+	UserName string
 }

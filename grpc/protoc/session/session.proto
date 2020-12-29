@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+//option go_package = "github.com/tidusant/c3m-grpc-protoc/protoc";
+package session;
+
+// The application's services definition.
+// We will use these services as common define for all grpc in app.
+service SessionServices {
+  rpc CreateSession(Void) returns (StringResponse) {};
+  rpc CheckSession(DataRequest) returns (BoolResponse) {};
+  rpc CheckRequest(CheckURLRequest) returns (BoolResponse) {};
+  rpc GetSession(DataRequest) returns (SessionMessage) {};
+  rpc SaveSession(SessionMessage) returns (BoolResponse) {};
+}
+
+
+//response type of all rpc response
+message Void{}
+message StringResponse  {
+	string Data =1;
+}
+message BoolResponse  {
+  bool Data =1;
+}
+message SessionMessage  {
+  string UserID =1;
+  string ShopID=2;
+  string UserName=3;
+  string Session=4;
+}
+
+//request type of all rpc response
+message DataRequest  {
+	string Data=1;
+}
+message CheckURLRequest  {
+  string URL=1;
+  string Address=2;
+}
+

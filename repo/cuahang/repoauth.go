@@ -91,7 +91,7 @@ func (r *Repo) Login(user, pass, session, userIP string) models.User {
 	err := coluser.FindOne(ctx, bson.M{"user": user, "password": passmd5}).Decode(&result)
 	r.QueryCount++
 	c3mcommon.CheckError("error query user", err)
-	log.Debugf("user result %v", result)
+	log.Debugf("user result %+v", result)
 	//if result.Name != "" {
 	//	coluserlogin := db.Collection("addons_userlogin")
 	//	var userlogin models.UserLogin

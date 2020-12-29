@@ -1,5 +1,13 @@
 package cuahang
 
+import (
+	"github.com/tidusant/c3m/common/c3mcommon"
+	"github.com/tidusant/c3m/common/log"
+	"github.com/tidusant/c3m/repo/models"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
 //
 //import (
 //	"encoding/json"
@@ -83,22 +91,24 @@ package cuahang
 //	langinfo, _ := json.Marshal(newitem.Langs)
 //	return "{\"Code\":\"" + newitem.Code + "\",\"Langs\":" + string(langinfo) + "}"
 //}
-//func GetAllPage(userid, shopid string) []models.Page {
-//	col := db.C("addons_pages")
-//	var rs []models.Page
-//	shop := GetShopById(userid, shopid)
-//	err := col.Find(bson.M{"shopid": shop.ID.Hex(), "publish": true}).All(&rs)
-//	c3mcommon.CheckError("get all page", err)
-//	return rs
-//}
-//func GetPageByCode(userid, shopid, code string) models.Page {
-//	col := db.C("addons_pages")
-//	var rs models.Page
-//	cond := bson.M{"shopid": shopid, "code": code}
-//	if userid != "594f665df54c58a2udfl54d3er" {
-//		cond["userid"] = userid
-//	}
-//	err := col.Find(cond).One(&rs)
-//	c3mcommon.CheckError("getcatbycode", err)
-//	return rs
-//}
+func (r *Repo) GetAllPage(shopid, templateid primitive.ObjectID) []models.Page {
+	col := db.Collection("pages")
+	var rs []models.Page
+	cond := bson.M{"shopid": shopid, "templateid": templateid}
+	log.Debugf("Getallpage cond %+v", cond)
+	cursor, err := col.Find(ctx, cond)
+	r.QueryCount++
+	if err = cursor.All(ctx, &rs); err != nil {
+		c3mcommon.CheckError("GetAllPage Error", err)
+	}
+	return rs
+}
+func (r *Repo) GetPageById(pageid primitive.ObjectID) models.Page {
+	col := db.Collection("addons_pages")
+	var rs models.Page
+	cond := bson.D{{"_id", pageid}}
+
+	err := col.FindOne(ctx, cond).Decode(&rs)
+	c3mcommon.CheckError("GetPageById", err)
+	return rs
+}
