@@ -16,7 +16,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	pb "github.com/tidusant/c3m/grpc/protoc"
-	"github.com/tidusant/c3m/repo/cuahang"
 	"github.com/tidusant/c3m/repo/models"
 
 	"encoding/base64"
@@ -41,7 +40,6 @@ type service struct {
 //extend class MainRPC
 type myRPC struct {
 	maingrpc.MainRPC
-	rpch cuahang.Repo
 }
 
 func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (*pb.RPCResponse, error) {
