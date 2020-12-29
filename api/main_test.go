@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"github.com/tidusant/c3m/common/c3mcommon"
 	"github.com/tidusant/c3m/common/mycrypto"
 
@@ -76,7 +77,10 @@ func setup() {
 	gin.SetMode(gin.TestMode)
 	// Setup your router, just like you did in your main function, and
 	// register your routes
-	initCheckSession()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	connectGrpcs(ctx)
+
 	r = gin.Default()
 	r.POST("/*name", postHandler)
 }
