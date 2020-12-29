@@ -8,8 +8,10 @@ import (
 	"github.com/tidusant/c3m/common/log"
 	"github.com/tidusant/c3m/common/mycrypto"
 	pb "github.com/tidusant/c3m/grpc/protoc"
+	pbses "github.com/tidusant/c3m/grpc/protoc/session"
 	"github.com/tidusant/c3m/repo/models"
 	"google.golang.org/grpc"
+	"sync"
 
 	"os"
 	"time"
@@ -28,8 +30,10 @@ func init() {
 }
 
 var grpcConns map[string]pb.GRPCServicesClient
+var sessConn pbses.SessionServicesClient
 var grpcAddressMap map[string]string
 var exposeport = "8081"
+var grpcLocker sync.Mutex
 
 //main function app run here
 func main() {
@@ -38,7 +42,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	connectGrpcs(ctx)
-	initCheckSession()
+	//initCheckSession()
 
 	//start gin
 	router := gin.Default()
@@ -51,9 +55,14 @@ func connectGrpcs(ctx context.Context) {
 	//check all grpc is running:
 	grpcAddressMap = make(map[string]string)
 	grpcConns = make(map[string]pb.GRPCServicesClient)
+	grpcAddressMap["ses"] = os.Getenv("SESSION_IP")
 	grpcAddressMap["aut"] = os.Getenv("AUTH_IP")
 	grpcAddressMap["shop"] = os.Getenv("SHOP_IP")
 	grpcAddressMap["ord"] = os.Getenv("ORD_IP")
+	grpcAddressMap["page"] = os.Getenv("PAGE_IP")
+
+	//init grpc ssession
+	registerSessionGrpc(ctx, "ses")
 
 	//implement concurrency
 	for name, add := range grpcAddressMap {
@@ -64,12 +73,12 @@ func connectGrpcs(ctx context.Context) {
 			}
 			registerGrpc(ctx, name)
 		}(name, add)
-
 	}
 
 }
 
 func registerGrpc(ctx context.Context, name string) {
+	grpcLocker.Lock()
 	fmt.Printf("Register grpc %s at %s\n", name, grpcAddressMap[name])
 	conn, err := grpc.Dial(grpcAddressMap[name], grpc.WithInsecure())
 	//defer conn.Close()
@@ -78,6 +87,19 @@ func registerGrpc(ctx context.Context, name string) {
 		fmt.Printf("Warning: can not call grpc auth %v", err)
 	} else {
 		grpcConns[name] = pb.NewGRPCServicesClient(conn)
+	}
+	grpcLocker.Unlock()
+}
+
+func registerSessionGrpc(ctx context.Context, name string) {
+	fmt.Printf("Register grpc session at %s\n", grpcAddressMap[name])
+	conn, err := grpc.Dial(grpcAddressMap[name], grpc.WithInsecure())
+	//defer conn.Close()
+
+	if err != nil {
+		fmt.Printf("Warning: can not call grpc auth %v", err)
+	} else {
+		sessConn = pbses.NewSessionServicesClient(conn)
 	}
 }
 
@@ -102,6 +124,7 @@ func postHandler(c *gin.Context) {
 		log.Debugf("marshall time:%s", time.Since(start2))
 	} else {
 		log.Debugf("request denied")
+		strrt = `{"Status":0,"Error":"request denied"}`
 	}
 
 	if strrt == "" {
@@ -121,7 +144,7 @@ func callgRPC(name string, rpcRequest pb.RPCRequest) models.RequestResult {
 		return rs
 	}
 	// Contact the server and print out its response.
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 	r, err := grpcConns[name].Call(ctx, &rpcRequest)
 	if err != nil {
@@ -186,65 +209,66 @@ func myRoute(c *gin.Context) models.RequestResult {
 	if RPCname == "CreateSex" {
 		//create session string and save it into db
 		//data = rpsex.CreateSession()
-		return models.RequestResult{Status: 1, Error: "", Data: CreateSession()}
+		sex := CreateSession()
+		if sex == "" {
+			return models.RequestResult{Error: "Cannot create session"}
+		}
+		return models.RequestResult{Status: 1, Error: "", Data: sex}
 	}
 
 	//check session
 
 	//if !rpsex.CheckSession(session) {
-	if !CheckSession(session) {
+	sex := GetSession(session)
+
+	if sex.Session == "" {
 		return models.RequestResult{Status: -1, Error: "Session not found"}
 	}
-	log.Debugf("session found: %+v", SessionPool[session])
+	log.Debugf("session found: %+v", sex)
+	reply := models.RequestResult{Error: ""}
+	if RPCname == "aut" {
+		if requestAction == "l" {
+			reply = callgRPC("aut", pb.RPCRequest{AppName: "admin-portal", Action: requestAction, Params: requestParams, Session: session, UserIP: userIP})
+			if reply.Status == 1 {
+				var data map[string]string
+				c3mcommon.CheckError("parse login response", json.Unmarshal([]byte(reply.Data), &data))
+				//save userinfo int session
+				SaveSession(&pbses.SessionMessage{Session: session, UserID: data["userid"], UserName: data["username"], ShopID: data["shopid"]})
+				//remove userid & shopid in reply
+				reply.Data = fmt.Sprintf(`{"username":"%s"}`, data["username"])
+			}
 
-	if RPCname == "aut" && requestAction == "l" {
-		reply := callgRPC("aut", pb.RPCRequest{AppName: "admin-portal", Action: requestAction, Params: requestParams, Session: session, UserIP: userIP})
-		if reply.Status == 1 {
-			var data map[string]string
-			c3mcommon.CheckError("parse login response", json.Unmarshal([]byte(reply.Data), &data))
-			//save userinfo int session
-			SessionPool[session].shopid = data["shopid"]
-			SessionPool[session].username = data["username"]
-			SessionPool[session].userid = data["userid"]
-			//remove userid & shopid in reply
-			reply.Data = fmt.Sprintf(`{"username":"%s"}`, data["username"])
+		} else if RPCname == "aut" && requestAction == "t" {
+			reply = models.RequestResult{Status: 1, Error: "", Data: `{"sex":"` + session + `","username":"` + sex.UserName + `","shop":"` + sex.ShopID + `"}`}
 		}
 		return reply
 	}
 
-	//always check login if RPCname not aut and create session
-	//reply := callgRPC("aut", pb.RPCRequest{AppName: "admin-portal", Action: "aut", Params: requestParams, Session: session, UserIP: userIP})
-	//if reply.Status != 1 {
-	//	return reply
-	//}
-	reply := models.RequestResult{Error: ""}
-	sex := GetSession(session)
-	if sex == nil {
-		reply.Error = "No session found"
+	//check auth
+	if sex.UserName == "" {
+		reply.Error = "Not authorize"
 		return reply
 	}
 
-	//some specific function relate to Session
 	if RPCname == "shop" && requestAction == "cs" {
 		//change shop
-		reply = callgRPC(RPCname, pb.RPCRequest{AppName: "admin-portal", Action: requestAction, Params: requestParams, Session: session, UserID: sex.userid, UserIP: userIP, ShopID: sex.shopid})
+		reply = callgRPC(RPCname, pb.RPCRequest{AppName: "admin-portal", Action: requestAction, Params: requestParams, Session: session, UserID: sex.UserID, UserIP: userIP, ShopID: sex.ShopID})
 		if reply.Status == 1 {
 			//update session
-			SessionPool[session].shopid = reply.Data
+			sex.ShopID = requestParams
+			SaveSession(sex)
 		}
-		log.Debugf("cs return:%+v", reply)
-	} else if RPCname == "aut" && requestAction == "t" {
-		reply = models.RequestResult{Status: 1, Error: "", Data: `{"sex":"` + session + `","username":"` + sex.username + `","shop":"` + sex.shopid + `"}`}
-		log.Debugf("t return:%+v", reply)
-	} else {
+		return reply
 
-		//normal gRPC call
-		log.Debugf("RPCname: %s", RPCname)
-		//time.Sleep(0 * time.Second)
-
-		reply = callgRPC(RPCname, pb.RPCRequest{AppName: "admin-portal", Action: requestAction, Params: requestParams, Session: session, UserID: sex.userid, UserIP: userIP, ShopID: sex.shopid})
-		log.Debugf("total time:%s", time.Since(start))
 	}
+
+	//normal gRPC call
+
+	log.Debugf("RPCname: %s", RPCname)
+	//time.Sleep(0 * time.Second)
+
+	reply = callgRPC(RPCname, pb.RPCRequest{AppName: "admin-portal", Action: requestAction, Params: requestParams, Session: session, UserID: sex.UserID, UserIP: userIP, ShopID: sex.ShopID})
+	log.Debugf("total time:%s", time.Since(start))
 
 	return reply
 }
