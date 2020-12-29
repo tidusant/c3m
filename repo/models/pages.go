@@ -1,14 +1,13 @@
 package models
 
 import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
-
-	"gopkg.in/mgo.v2/bson"
 )
 
 //Page ...
 type Page struct {
-	ID           bson.ObjectId       `bson:"_id,omitempty"`
+	ID           primitive.ObjectID  `bson:"_id,omitempty"`
 	Code         string              `bson:"code"`
 	UserID       string              `bson:"userid"`
 	ShopID       string              `bson:"shopid"`
