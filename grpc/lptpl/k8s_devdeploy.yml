@@ -27,7 +27,7 @@ spec:
           - mountPath: /templates
             name: template-volume
           ports:
-            - containerPort: 8905 #Exposes the port 8901 of the container test test
+            - containerPort: 8905 #Exposes the port 8901 of the container
           env:
             - name: CHADMIN_URI
               valueFrom:
