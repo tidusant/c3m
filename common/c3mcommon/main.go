@@ -972,7 +972,6 @@ func RequestUrl(urlrequest, method, data string) (string, *http.Response) {
 	bodyresp, err := ioutil.ReadAll(resp.Body)
 	bodystr := string(bodyresp)
 	CheckError("request read data", err)
-
 	return bodystr, resp
 }
 func RequestUrl2(urlrequest, method string, data url.Values) string {

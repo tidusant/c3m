@@ -2,11 +2,23 @@ package models
 
 import (
 	"encoding/json"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
 
 	"gopkg.in/mgo.v2/bson"
 )
 
+type LPTemplate struct {
+	ID          primitive.ObjectID `bson:"_id,omitempty"`
+	UserID      primitive.ObjectID `bson:"userid"`
+	Status      int                `bson:"status"` //-2: delete, -1: reject,0:local, 1: approved and publish, 2: waiting for approve
+	Description string             `bson:"description"`
+	Path        string
+	Name        string    `bson:"name"`
+	Viewed      int       `bson:"viewed"`
+	Installed   int       `bson:"installed"`
+	Created     time.Time `bson:"created"`
+}
 type Template struct {
 	ID           bson.ObjectId `bson:"_id,omitempty"`
 	Code         string        `bson:"code"`
