@@ -11,7 +11,7 @@ metadata:
   labels:
     app: c3m-grpc-session
 spec:
-  replicas: 1 #only 1 session to have session memory consistent
+  replicas: 1 #only 1 session to have session memory consistent t
   selector:
     matchLabels:
       app: c3m-grpc-session
