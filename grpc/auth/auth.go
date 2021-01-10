@@ -48,8 +48,8 @@ func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (*pb.RPCResponse,
 		rs = a.login(usex)
 	} else if usex.Action == "lo" {
 		rs = a.logout(usex.Session)
-	} else if usex.Action == "aut" {
-		rs = a.auth(usex)
+		//} else if usex.Action == "aut" {
+		//	rs = a.auth(usex)
 	} else {
 		//unknow action
 		return resp, nil
@@ -63,15 +63,15 @@ func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (*pb.RPCResponse,
 }
 
 //auth: to authenticate user already login, for portal, return userid[+]shopid
-func (a *Auth) auth(usex models.UserSession) models.RequestResult {
-	rs := a.rpch.GetLogin(usex.Session)
-	if rs.UserId == primitive.NilObjectID {
-		return models.RequestResult{Status: -1, Error: "user not logged in"}
-	} else {
-		user := a.rpch.GetUserInfo(rs.UserId)
-		return models.RequestResult{Error: "", Status: 1, Data: `{"userid":"` + rs.UserId.Hex() + `","name":"` + user.Name + `","sex":"` + usex.Session + `","shop":"` + rs.ShopId.Hex() + `"}`}
-	}
-}
+//func (a *Auth) auth(usex models.UserSession) models.RequestResult {
+//	rs := a.rpch.GetLogin(usex.Session)
+//	if rs.UserId == primitive.NilObjectID {
+//		return models.RequestResult{Status: -1, Error: "user not logged in"}
+//	} else {
+//		user := a.rpch.GetUserInfo(rs.UserId)
+//		return models.RequestResult{Error: "", Status: 1, Data: `{"userid":"` + rs.UserId.Hex() + `","name":"` + user.Name + `","sex":"` + usex.Session + `","shop":"` + rs.ShopId.Hex() + `"}`}
+//	}
+//}
 
 //login user and update Session and IP in user_login. then return auth call to get userid[+]shopid
 func (a *Auth) login(usex models.UserSession) models.RequestResult {
@@ -93,7 +93,7 @@ func (a *Auth) login(usex models.UserSession) models.RequestResult {
 			Error:   "",
 			Status:  1,
 			Message: "logged in",
-			Data:    `{"username":"` + user.Name + `","userid":"` + user.ID.Hex() + `","shopid":"` + user.ShopId.Hex() + `"}`}
+			Data:    `{"username":"` + user.Name + `","userid":"` + user.ID.Hex() + `","shopid":"` + user.ShopId.Hex() + `","group":"` + user.Group + `"}`}
 
 	}
 	return models.RequestResult{Error: "Login failed"}
