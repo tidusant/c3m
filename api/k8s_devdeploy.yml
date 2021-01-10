@@ -11,7 +11,7 @@ metadata:
   labels:
     app: c3m-api
 spec:
-  replicas: 1 #We always want more than 1 replica for HA test
+  replicas: 3 #We always want more than 1 replica for HA test
   selector:
     matchLabels:
       app: c3m-api
@@ -44,6 +44,8 @@ spec:
               value: "c3m-grpc-ord-service:8903"
             - name: PAGE_IP
               value: "c3m-grpc-page-service:8904"
+            - name: LPTPL_IP
+              value: "c3m-grpc-lptpl-service:8905"
             - name: SESSION_IP
               value: "c3m-grpc-session-service:8864"
               #value: "c3m-grpc-ord-service.colis-dev.svc.cluster.local"

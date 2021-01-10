@@ -34,7 +34,7 @@ func (m *MainRPC) InitUsex(ctx context.Context, in *pb.RPCRequest, name, ver str
 	m.Usex.Params = in.Params
 	m.Usex.UserID, _ = primitive.ObjectIDFromHex(in.UserID)
 	m.Usex.ShopID, _ = primitive.ObjectIDFromHex(in.ShopID)
-	log.Debugf("action:%s - params:%s", in.Action, in.Params)
+	log.Debugf("action:%s - userid:%s", in.Action, in.UserID)
 	//check shop permission
 	//if in.ShopID != "" {
 	//	shopidObj, _ := primitive.ObjectIDFromHex(in.ShopID)
