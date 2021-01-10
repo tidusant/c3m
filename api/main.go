@@ -234,13 +234,13 @@ func myRoute(c *gin.Context) models.RequestResult {
 				var data map[string]string
 				c3mcommon.CheckError("parse login response", json.Unmarshal([]byte(reply.Data), &data))
 				//save userinfo int session
-				SaveSession(&pbses.SessionMessage{Session: session, UserID: data["userid"], UserName: data["username"], ShopID: data["shopid"]})
+				SaveSession(&pbses.SessionMessage{Session: session, UserID: data["userid"], UserName: data["username"], ShopID: data["shopid"], Group: data["group"]})
 				//remove userid & shopid in reply
 				reply.Data = fmt.Sprintf(`{"username":"%s"}`, data["username"])
 			}
 
 		} else if RPCname == "aut" && requestAction == "t" {
-			reply = models.RequestResult{Status: 1, Error: "", Data: `{"sex":"` + session + `","username":"` + sex.UserName + `","shop":"` + sex.ShopID + `"}`}
+			reply = models.RequestResult{Status: 1, Error: "", Data: `{"sex":"` + session + `","username":"` + sex.UserName + `","shop":"` + sex.ShopID + `","group":"` + sex.Group + `"}`}
 		}
 		return reply
 	}
