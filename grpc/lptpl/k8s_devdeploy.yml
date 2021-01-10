@@ -23,6 +23,16 @@ spec:
       containers:
         - name: c3m-grpc-lptpl #1st container
           image: tidusant/c3m-grpc-lptpl:latest #Dockerhub image
+          volumeMounts:
+          - mountPath: /templates
+            name: template-volume
+          volumes:
+          - name: template-volume
+            hostPath:
+              # directory location on host
+              path: ~/c3mdata/templates
+              # this field is optional
+              type: Directory
           ports:
             - containerPort: 8905 #Exposes the port 8901 of the container test test
           env:
