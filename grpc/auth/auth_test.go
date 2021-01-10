@@ -6,8 +6,6 @@ import (
 	"github.com/tidusant/c3m/repo/models"
 
 	"encoding/json"
-	"strings"
-
 	"fmt"
 
 	"os"
@@ -80,15 +78,17 @@ func TestLoginCorrect(t *testing.T) {
 		t.Fatalf("Test fail: User cannot log in")
 	}
 }
-func TestCheckLoginWithSession(t *testing.T) {
-	rs := doCall("TestCheckLoginWithSession", "aut", "", t)
-	if rs.Status != 1 {
-		t.Fatalf("Test fail: User login but cannot test")
-	}
-}
-func TestCheckLoginWithSession_Portal(t *testing.T) {
-	rs := doCall("TestCheckLoginWithSession_Portal", "aut", "", t)
-	if rs.Status != 1 || strings.Index(rs.Data, `"userid"`) < 1 {
-		t.Fatalf("Test fail: User login but cannot auth")
-	}
-}
+
+//==== comment below code just bc of func auth is remove
+//func TestCheckLoginWithSession(t *testing.T) {
+//	rs := doCall("TestCheckLoginWithSession", "aut", "", t)
+//	if rs.Status != 1 {
+//		t.Fatalf("Test fail: User login but cannot test")
+//	}
+//}
+//func TestCheckLoginWithSession_Portal(t *testing.T) {
+//	rs := doCall("TestCheckLoginWithSession_Portal", "aut", "", t)
+//	if rs.Status != 1 || strings.Index(rs.Data, `"userid"`) < 1 {
+//		t.Fatalf("Test fail: User login but cannot auth")
+//	}
+//}
