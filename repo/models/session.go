@@ -9,4 +9,5 @@ type Session struct {
 	UserID   string
 	ShopID   string
 	UserName string
+	Group    string
 }

@@ -88,6 +88,7 @@ func (s *service) GetSession(ctx context.Context, in *pb.DataRequest) (*pb.Sessi
 		rs.UserID = SessionPool[in.Data].UserID
 		rs.UserName = SessionPool[in.Data].UserName
 		rs.ShopID = SessionPool[in.Data].ShopID
+		rs.Group = SessionPool[in.Data].Group
 		//update session time expire
 		SessionPool[in.Data].Time = time.Now()
 	}
@@ -99,6 +100,7 @@ func (s *service) SaveSession(ctx context.Context, in *pb.SessionMessage) (*pb.B
 		SessionPool[in.Session].UserName = in.UserName
 		SessionPool[in.Session].UserID = in.UserID
 		SessionPool[in.Session].ShopID = in.ShopID
+		SessionPool[in.Session].Group = in.Group
 
 		rs.Data = true
 	}

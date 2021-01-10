@@ -27,6 +27,7 @@ message SessionMessage  {
   string ShopID=2;
   string UserName=3;
   string Session=4;
+  string Group=5;
 }
 
 //request type of all rpc response
