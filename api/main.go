@@ -253,7 +253,7 @@ func myRoute(c *gin.Context) models.RequestResult {
 
 	if RPCname == "shop" && requestAction == "cs" {
 		//change shop
-		reply = callgRPC(RPCname, pb.RPCRequest{AppName: "admin-portal", Action: requestAction, Params: requestParams, Session: session, UserID: sex.UserID, UserIP: userIP, ShopID: sex.ShopID})
+		reply = callgRPC(RPCname, pb.RPCRequest{AppName: "admin-portal", Action: requestAction, Params: requestParams, Session: session, UserID: sex.UserID, UserIP: userIP, ShopID: sex.ShopID, Group: sex.Group})
 		if reply.Status == 1 {
 			//update session
 			sex.ShopID = requestParams

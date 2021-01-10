@@ -12,6 +12,7 @@ type UserSession struct {
 	Params  string
 	ShopID  primitive.ObjectID
 	UserIP  string
+	Group   string
 }
 type User struct {
 	ID     primitive.ObjectID `bson:"_id,omitempty"`
