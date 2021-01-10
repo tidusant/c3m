@@ -43,7 +43,7 @@ spec:
       - name: template-volume
         hostPath:
           # directory location on host
-          path: ~/c3mdata/lptemplates
+          path: ./c3mdata/lptemplates
           # this field is optional
           type: Directory
 ---
