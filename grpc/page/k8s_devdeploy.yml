@@ -24,7 +24,7 @@ spec:
         - name: c3m-grpc-page #1st container
           image: tidusant/c3m-grpc-page:latest #Dockerhub image
           ports:
-            - containerPort: 8904 #Exposes the port 8901 of the container test test
+            - containerPort: 8904 #Exposes the port 8901 of the container
           env:
             - name: CHADMIN_URI
               valueFrom:
