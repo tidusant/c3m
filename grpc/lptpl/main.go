@@ -29,7 +29,7 @@ import (
 const (
 	name           string = "lptemplate"
 	ver            string = "1"
-	templateFolder        = "lptemplates"
+	templateFolder        = "templates"
 )
 
 type service struct {
