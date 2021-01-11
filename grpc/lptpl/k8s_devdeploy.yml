@@ -24,6 +24,7 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: c3m-grpc-lptpl-pvc
+  namespace: colis-dev
 spec:
   storageClassName: manual
   accessModes:

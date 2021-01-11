@@ -10,3 +10,6 @@ env CHADMIN_DB_HOST=127.0.0.1:27017 env CHADMIN_DB_NAME=cuahang env CHADMIN_DB_U
 
 ### run in docker:
 docker build -t tidusant/colis-grpc-lptpl .  
+
+###reference
+https://www.bogotobogo.com/DevOps/Docker/Docker_Kubernetes_PersistentVolumes_PersistentVolumeClaims.php
