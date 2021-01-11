@@ -3,6 +3,36 @@ kind: Namespace
 metadata:
   name: colis-dev
 ---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: c3m-grpc-lptpl-pv
+  labels:
+    type: local
+  annotations:
+    pv.beta.kubernetes.io/gid: "1001"
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 3Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/data/c3m/lptemplates"
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: c3m-grpc-lptpl-pvc
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 3Gi
+
+---
 kind: Deployment
 apiVersion: apps/v1
 metadata:
@@ -11,7 +41,7 @@ metadata:
   labels:
     app: c3m-grpc-lptpl
 spec:
-  replicas: 2 #We always want more than 1 replica for HA
+  replicas: 3 #We always want more than 1 replica for HA
   selector:
     matchLabels:
       app: c3m-grpc-lptpl
@@ -41,11 +71,8 @@ spec:
                   key: devdb_name
       volumes:
       - name: template-volume
-        hostPath:
-          # directory location on host
-          path: /home/ec2-user/c3mdata/lptemplates
-          # this field is optional
-          type: Directory
+        persistentVolumeClaim:
+          claimName: c3m-grpc-lptpl-pvc
 ---
 kind: Service
 apiVersion: v1
