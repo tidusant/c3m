@@ -30,4 +30,6 @@ message RPCRequest  {
     string Params=7;
     string ShopID=8;
   string Group=9;
+  string Username=10;
+  string Modules=11;
 }

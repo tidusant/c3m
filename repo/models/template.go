@@ -13,11 +13,12 @@ type LPTemplate struct {
 	UserID      primitive.ObjectID `bson:"userid"`
 	Status      int                `bson:"status"` //-2: delete, -1: reject,0:local, 1: approved and publish, 2: waiting for approve
 	Description string             `bson:"description"`
-	Path        string
-	Name        string    `bson:"name"`
-	Viewed      int       `bson:"viewed"`
-	Installed   int       `bson:"installed"`
-	Created     time.Time `bson:"created"`
+	Path        string             `bson:"path"`
+	Name        string             `bson:"name"`
+	Viewed      int                `bson:"viewed"`
+	Installed   int                `bson:"installed"`
+	Created     time.Time          `bson:"created"`
+	User        string             `bson:"user"`
 }
 type Template struct {
 	ID           bson.ObjectId `bson:"_id,omitempty"`

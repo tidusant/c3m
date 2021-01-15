@@ -2,6 +2,7 @@ package cuahang
 
 import (
 	"fmt"
+	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/tidusant/c3m/repo/models"
 	"go.mongodb.org/mongo-driver/bson"
@@ -25,7 +26,7 @@ func (r *Repo) UpdateLpTemplate(template models.LPTemplate) error {
 	}
 	return nil
 }
-func (r *Repo) CreateLpTemplate(userid primitive.ObjectID, templatename string) error {
+func (r *Repo) CreateLpTemplate(userid primitive.ObjectID, templatename, path string) error {
 
 	col := db.Collection("lptemplates")
 	cond := bson.M{"userid": userid, "name": templatename}
@@ -38,7 +39,7 @@ func (r *Repo) CreateLpTemplate(userid primitive.ObjectID, templatename string) 
 		return fmt.Errorf("Duplicate template name: %s", templatename)
 	}
 	//insert
-	_, err = col.InsertOne(ctx, models.LPTemplate{UserID: userid, Name: templatename, Status: 2, Created: time.Now()})
+	_, err = col.InsertOne(ctx, models.LPTemplate{UserID: userid, Name: templatename, Path: path, Status: 2, Created: time.Now()})
 	r.QueryCount++
 	if err != nil {
 		return err
@@ -58,12 +59,28 @@ func (r *Repo) GetLpTemplate(userid primitive.ObjectID, templatename string) (mo
 	return rs, nil
 }
 
-func (r *Repo) GetAllLpTemplate(userid primitive.ObjectID) ([]models.LPTemplate, error) {
+func (r *Repo) GetAllLpTemplate(userid primitive.ObjectID, isAdmin bool) ([]models.LPTemplate, error) {
 	col := db.Collection("lptemplates")
 	var rs []models.LPTemplate
-	cond := bson.M{"userid": userid}
+	cond := bson.M{}
+	if !isAdmin {
+		cond["userid"] = userid
+
+	}
+	cursor, err := col.Aggregate(ctx, mongo.Pipeline{
+		bson.D{{"$match", cond}},
+		bson.D{{"$lookup", bson.D{{"from", "addons_users"}, {"localField", "userid"}, {"foreignField", "_id"}, {"as", "user"}}}},
+		bson.D{{"$unwind", bson.D{{"path", "$user"}, {"preserveNullAndEmptyArrays", false}}}},
+		bson.D{{"$addFields", bson.D{
+			{"user", "$user.user"},
+		}}},
+		bson.D{{"$sort", bson.D{
+			{"_id", -1},
+		}}},
+	})
+
 	//query
-	cursor, err := col.Find(ctx, cond)
+	//cursor, err := col.Find(ctx, cond)
 	r.QueryCount++
 	if err = cursor.All(ctx, &rs); err != nil {
 		return rs, err

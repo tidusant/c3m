@@ -291,6 +291,8 @@ func (r *Repo) GetAllOrderStatus(shopid primitive.ObjectID) []models.OrderStatus
 	col := db.Collection("addons_orders")
 	var rs []models.OrderStatus
 	//cond := bson.M{"shopid": shopid.Hex()}
+	//cond:=bson.D{}
+	//cond=append(cond,bson.E{"key","value"})
 	matchStage := bson.D{{"$match", bson.D{{"shopid", shopid}}}}
 	groupStage := bson.D{{"$group", bson.D{{"_id", "$status"}, {"orderCount", bson.D{{"$sum", 1}}}}}}
 	lookupStage := bson.D{{"$lookup", bson.D{{"from", "addons_order_status"}, {"localField", "_id"}, {"foreignField", "_id"}, {"as", "status"}}}}

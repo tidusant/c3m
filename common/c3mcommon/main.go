@@ -915,6 +915,29 @@ func RequestAPI(address, query, data string) string {
 	b, _ := json.Marshal(rs)
 	return string(b)
 }
+
+//same as requestAPI but encode data with Encode and decode data with func Decode (decode of encDat2)
+func RequestAPI2(address, query, data string) string {
+	data = "data=" + mycrypto.Encode(data, 3)
+
+	if address[len(address)-1:len(address)] != "/" {
+		address += "/"
+	}
+
+	rtstr, resp := RequestUrl(address+mycrypto.Encode(query, 3), "POST", data)
+	rs := RequestResult{Status: 0}
+	if resp == nil || resp.StatusCode != 200 {
+		rs.Error = "Request service error. Please check the service at " + address
+	} else {
+		rtstr = mycrypto.Decode(rtstr)
+		err := json.Unmarshal([]byte(rtstr), &rs)
+		if err != nil {
+			rs.Error = "Response string parse json fail: " + err.Error()
+		}
+	}
+	b, _ := json.Marshal(rs)
+	return string(b)
+}
 func RequestBuildService(uri, method, data string) string {
 
 	data = "data=" + mycrypto.EncDat2(data)

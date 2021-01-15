@@ -6,23 +6,25 @@ import (
 )
 
 type UserSession struct {
-	Session string
-	UserID  primitive.ObjectID
-	Action  string
-	Params  string
-	ShopID  primitive.ObjectID
-	UserIP  string
-	Group   string
+	Session  string
+	UserID   primitive.ObjectID
+	Action   string
+	Params   string
+	ShopID   primitive.ObjectID
+	UserIP   string
+	Group    string
+	Username string
+	Modules  map[string]bool
 }
 type User struct {
-	ID     primitive.ObjectID `bson:"_id,omitempty"`
-	User   string             `bson:"user"`
-	Name   string             `bson:"name"`
-	Email  string             `bson:"email"`
-	Active int32              `bson:"active"`
-	Group  string             `bson:"group"`
-	Config UserConfig         `bson:"config"`
-	ShopId primitive.ObjectID `bson:"shopid"`
+	ID      primitive.ObjectID `bson:"_id,omitempty"`
+	User    string             `bson:"user"`
+	Name    string             `bson:"name"`
+	Email   string             `bson:"email"`
+	Active  int32              `bson:"active"`
+	Group   string             `bson:"group"`
+	Modules string             `bson:"modules"`
+	ShopId  primitive.ObjectID `bson:"shopid"`
 }
 
 type UserConfig struct {

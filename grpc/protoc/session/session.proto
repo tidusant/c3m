@@ -28,6 +28,7 @@ message SessionMessage  {
   string UserName=3;
   string Session=4;
   string Group=5;
+  string Modules=6;
 }
 
 //request type of all rpc response

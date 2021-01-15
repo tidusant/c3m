@@ -9,6 +9,7 @@ import (
 	"github.com/tidusant/c3m/repo/cuahang"
 	"github.com/tidusant/c3m/repo/models"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"strings"
 	"time"
 )
 
@@ -33,9 +34,14 @@ func (m *MainRPC) InitUsex(ctx context.Context, in *pb.RPCRequest, name, ver str
 	m.Usex.UserIP = in.UserIP
 	m.Usex.Group = in.Group
 	m.Usex.Params = in.Params
+	m.Usex.Username = in.Username
+	m.Usex.Modules = make(map[string]bool)
+	for _, v := range strings.Split(in.Modules, ",") {
+		m.Usex.Modules[v] = true
+	}
 	m.Usex.UserID, _ = primitive.ObjectIDFromHex(in.UserID)
 	m.Usex.ShopID, _ = primitive.ObjectIDFromHex(in.ShopID)
-	log.Debugf("action:%s - userid:%s", in.Action, in.UserID)
+	log.Debugf("action:%s - userid:%s - group:%s - modules:%+v", in.Action, in.UserID, in.Group, in.Modules)
 	//check shop permission
 	//if in.ShopID != "" {
 	//	shopidObj, _ := primitive.ObjectIDFromHex(in.ShopID)

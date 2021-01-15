@@ -708,7 +708,7 @@ func Decode4(data string) string {
 	return data
 }
 
-//encode for wapi
+//encode for wapi - not completed
 func EncodeW(data string) string {
 	if data == "" {
 		return data
@@ -718,7 +718,7 @@ func EncodeW(data string) string {
 	return x2
 }
 
-//decode for wapi
+//decode for wapi - not completed
 func DecodeW(code string) string {
 	if code == "" {
 		return code
