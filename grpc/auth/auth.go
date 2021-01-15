@@ -93,7 +93,7 @@ func (a *Auth) login(usex models.UserSession) models.RequestResult {
 			Error:   "",
 			Status:  1,
 			Message: "logged in",
-			Data:    `{"username":"` + user.Name + `","userid":"` + user.ID.Hex() + `","shopid":"` + user.ShopId.Hex() + `","group":"` + user.Group + `"}`}
+			Data:    `{"username":"` + user.Name + `","userid":"` + user.ID.Hex() + `","shopid":"` + user.ShopId.Hex() + `","group":"` + user.Group + `","modules":"` + user.Modules + `"}`}
 
 	}
 	return models.RequestResult{Error: "Login failed"}
