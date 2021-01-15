@@ -31,7 +31,7 @@ spec:
             - mountPath: /app/templates
               name: template-volume
           ports:
-            - containerPort: 8081 #Exposes the port 8901 of the container
+            - containerPort: 8082 #Exposes the port 8901 of the container
           env:
             - name: API_ADD
               value: "c3m-api-service:8081"
@@ -50,5 +50,5 @@ spec:
   ports:
     - name: c3m-lptest-port
       protocol: TCP
-      port: 8081
-      nodePort: 30081 #must be between 30000 - 32767
+      port: 8082
+      nodePort: 30082 #must be between 30000 - 32767
