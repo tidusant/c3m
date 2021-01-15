@@ -6,11 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/tidusant/c3m/common/c3mcommon"
-	"github.com/tidusant/c3m/repo/models"
-	lpmodels "github.com/tidusant/c3mlp/repo/models"
 	log "github.com/tidusant/chadmin-log"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"io"
 	"io/ioutil"
 	"os"
@@ -318,69 +314,4 @@ func RemoveComment(s string) string {
 	t2 := strings.Replace(t, `-->`, ``, 1)
 
 	return t2
-}
-func GetTemplate(session string) ([]lpmodels.Template, error) {
-	var rt []lpmodels.Template
-	localtemplates := make(map[string]string)
-
-	if _, err := os.Stat(rootFolder); err == nil {
-		files, _ := ioutil.ReadDir(rootFolder)
-		for _, f := range files {
-			if f.IsDir() {
-				log.Debugf("check is folder %s", f.Name())
-				//check screen shot
-				log.Debugf("check %s", rootFolder+"/"+f.Name()+"/screenshot.jpg")
-				if _, err := os.Stat(rootFolder + "/" + f.Name() + "/screenshot.jpg"); err == nil {
-					localtemplates[f.Name()] = f.Name()
-				}
-			}
-		}
-	}
-
-	//get template form server
-	bodystr := c3mcommon.RequestAPI(apiserver, "lptpl", session+"|la")
-	var rs models.RequestResult
-	err := json.Unmarshal([]byte(bodystr), &rs)
-	if err != nil {
-		return rt, err
-	}
-	if rs.Status != 1 {
-		log.Debugf("rs %+v", rs)
-		return rt, fmt.Errorf(rs.Error)
-	}
-
-	log.Debugf("rs template: %+v", rs)
-	err = json.Unmarshal([]byte(rs.Data), &rt)
-	if err != nil {
-		return rt, err
-	}
-	for k, v := range rt {
-		//hide templateID & userID
-		rt[k].ID = primitive.NilObjectID
-		rt[k].UserID = primitive.NilObjectID
-		rt[k].Path = "./"
-		if _, ok := localtemplates[v.Name]; ok {
-			delete(localtemplates, v.Name)
-		}
-	}
-
-	//add local template into result
-	for k, _ := range localtemplates {
-		rt = append(rt, lpmodels.Template{Name: k, Status: 0, Path: rootFolder + "/" + k})
-	}
-
-	return rt, nil
-}
-func HandleGetLocal(c *gin.Context) models.RequestResult {
-	session := c.PostForm("data")
-	templates, err := GetTemplate(session)
-	if err != nil {
-		errrs := models.RequestResult{Error: err.Error()}
-		if err.Error() == "Session not found" {
-			errrs.Status = -1
-		}
-		return errrs
-	}
-	b, _ := json.Marshal(templates)
-	return models.RequestResult{Status: 1, Data: string(b)}
 }

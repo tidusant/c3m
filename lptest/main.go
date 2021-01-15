@@ -59,14 +59,6 @@ func main() {
 	//init config
 	router := gin.Default()
 
-	//http.Handle("/template/",  http.FileServer(http.Dir("./public")))
-
-	//router.POST("/gettemplate", func(c *gin.Context) {
-	//	rs:=HandleGetTemplate(c)
-	//	b,_:=json.Marshal(rs)
-	//	c.String(http.StatusOK, string(b))
-	//})
-
 	//router.Use(static.Serve("/", static.LocalFile("static", false)))
 	router.StaticFile("/", layoutPath+"/index.html")
 	//nextjs request File
