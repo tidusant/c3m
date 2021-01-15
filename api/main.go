@@ -234,13 +234,13 @@ func myRoute(c *gin.Context) models.RequestResult {
 				var data map[string]string
 				c3mcommon.CheckError("parse login response", json.Unmarshal([]byte(reply.Data), &data))
 				//save userinfo int session
-				SaveSession(&pbses.SessionMessage{Session: session, UserID: data["userid"], UserName: data["username"], ShopID: data["shopid"], Group: data["group"]})
+				SaveSession(&pbses.SessionMessage{Session: session, UserID: data["userid"], UserName: data["username"], ShopID: data["shopid"], Group: data["group"], Modules: data["modules"]})
 				//remove userid & shopid in reply
-				reply.Data = fmt.Sprintf(`{"username":"%s"}`, data["username"])
+				reply.Data = fmt.Sprintf(`{"username":"%s","group":"%s","modules":"%s"}`, data["username"], data["group"], data["modules"])
 			}
 
 		} else if RPCname == "aut" && requestAction == "t" {
-			reply = models.RequestResult{Status: 1, Error: "", Data: `{"sex":"` + session + `","username":"` + sex.UserName + `","shop":"` + sex.ShopID + `","group":"` + sex.Group + `"}`}
+			reply = models.RequestResult{Status: 1, Error: "", Data: `{"sex":"` + session + `","username":"` + sex.UserName + `","shop":"` + sex.ShopID + `","group":"` + sex.Group + `","modules":"` + sex.Modules + `"}`}
 		}
 		return reply
 	}
@@ -253,7 +253,7 @@ func myRoute(c *gin.Context) models.RequestResult {
 
 	if RPCname == "shop" && requestAction == "cs" {
 		//change shop
-		reply = callgRPC(RPCname, pb.RPCRequest{AppName: "admin-portal", Action: requestAction, Params: requestParams, Session: session, UserID: sex.UserID, UserIP: userIP, ShopID: sex.ShopID, Group: sex.Group})
+		reply = callgRPC(RPCname, pb.RPCRequest{AppName: "admin-portal", Action: requestAction, Params: requestParams, Session: session, UserID: sex.UserID, UserIP: userIP, ShopID: sex.ShopID, Group: sex.Group, Username: sex.UserName, Modules: sex.Modules})
 		if reply.Status == 1 {
 			//update session
 			sex.ShopID = requestParams
@@ -268,7 +268,7 @@ func myRoute(c *gin.Context) models.RequestResult {
 	log.Debugf("RPCname: %s", RPCname)
 	//time.Sleep(0 * time.Second)
 
-	reply = callgRPC(RPCname, pb.RPCRequest{AppName: "admin-portal", Action: requestAction, Params: requestParams, Session: session, UserID: sex.UserID, UserIP: userIP, ShopID: sex.ShopID})
+	reply = callgRPC(RPCname, pb.RPCRequest{AppName: "admin-portal", Action: requestAction, Params: requestParams, Session: session, UserID: sex.UserID, UserIP: userIP, ShopID: sex.ShopID, Group: sex.Group, Username: sex.UserName, Modules: sex.Modules})
 	log.Debugf("total time:%s", time.Since(start))
 
 	return reply
