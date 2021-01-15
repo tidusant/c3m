@@ -84,11 +84,13 @@ func (s *service) CheckRequest(ctx context.Context, in *pb.CheckURLRequest) (*pb
 func (s *service) GetSession(ctx context.Context, in *pb.DataRequest) (*pb.SessionMessage, error) {
 	rs := &pb.SessionMessage{}
 	if _, ok := SessionPool[in.Data]; ok {
+		log.Debugf("session time: %s", SessionPool[in.Data].Time.String())
 		rs.Session = in.Data
 		rs.UserID = SessionPool[in.Data].UserID
 		rs.UserName = SessionPool[in.Data].UserName
 		rs.ShopID = SessionPool[in.Data].ShopID
 		rs.Group = SessionPool[in.Data].Group
+		rs.Modules = SessionPool[in.Data].Modules
 		//update session time expire
 		SessionPool[in.Data].Time = time.Now()
 	}
@@ -101,7 +103,7 @@ func (s *service) SaveSession(ctx context.Context, in *pb.SessionMessage) (*pb.B
 		SessionPool[in.Session].UserID = in.UserID
 		SessionPool[in.Session].ShopID = in.ShopID
 		SessionPool[in.Session].Group = in.Group
-
+		SessionPool[in.Session].Modules = in.Modules
 		rs.Data = true
 	}
 	return rs, nil
