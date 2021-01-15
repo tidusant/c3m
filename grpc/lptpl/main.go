@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/base64"
+	"github.com/tidusant/c3m/common/mycrypto"
 	maingrpc "github.com/tidusant/c3m/grpc"
 	pb "github.com/tidusant/c3m/grpc/protoc"
 	"io/ioutil"
@@ -51,6 +52,8 @@ func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (*pb.RPCResponse,
 			rs = m.Submit(false)
 		} else if m.Usex.Action == "rs" {
 			rs = m.Submit(true)
+		} else if m.Usex.Action == "lat" {
+			rs = m.LoadAllTest()
 		} else if m.Usex.Action == "la" {
 			rs = m.LoadAll()
 		} else {
@@ -60,8 +63,40 @@ func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (*pb.RPCResponse,
 	}
 	return m.ReturnRespone(rs), nil
 }
+func (m *myRPC) LoadAllTest() models.RequestResult {
+	if ok, _ := m.Usex.Modules["c3m-lptpl-admin"]; !ok {
+		return models.RequestResult{Error: "permission denied"}
+	}
+	templates, err := m.Rpch.GetAllLpTemplate(m.Usex.UserID, true)
+	if err != nil {
+		return models.RequestResult{Error: err.Error()}
+	}
+	var ptemplates []models.LPTemplate
+	var atemplates []models.LPTemplate
+	for _, v := range templates {
+		if v.Status == 2 {
+			ptemplates = append(ptemplates, v)
+		} else if v.Status == 1 {
+			atemplates = append(atemplates, v)
+		}
+	}
+	//b, _ := json.Marshal(ptemplates)
+	type RT struct {
+		Ptemplates []models.LPTemplate
+		Atemplates []models.LPTemplate
+	}
+
+	b, err := json.Marshal(RT{Ptemplates: ptemplates, Atemplates: atemplates})
+	if err != nil {
+		log.Debugf("error:%s", err.Error())
+	}
+	return models.RequestResult{Status: 1, Data: string(b)}
+}
 func (m *myRPC) LoadAll() models.RequestResult {
-	templates, err := m.Rpch.GetAllLpTemplate(m.Usex.UserID)
+	if ok, _ := m.Usex.Modules["c3m-lptpl-builder"]; !ok {
+		return models.RequestResult{Error: "permission denied"}
+	}
+	templates, err := m.Rpch.GetAllLpTemplate(m.Usex.UserID, false)
 	if err != nil {
 		return models.RequestResult{Error: err.Error()}
 	}
@@ -69,6 +104,9 @@ func (m *myRPC) LoadAll() models.RequestResult {
 	return models.RequestResult{Status: 1, Data: string(b)}
 }
 func (m *myRPC) Submit(resubmit bool) models.RequestResult {
+	if ok, _ := m.Usex.Modules["c3m-lptpl-builder"]; !ok {
+		return models.RequestResult{Error: "permission denied"}
+	}
 	args := strings.Split(m.Usex.Params, ",")
 	if len(args) < 2 {
 		return models.RequestResult{Error: "something wrong"}
@@ -94,17 +132,26 @@ func (m *myRPC) Submit(resubmit bool) models.RequestResult {
 	}
 	mfile := make(map[string][]byte)
 	json.Unmarshal(s, &mfile)
-	tplUserFolder := templateFolder + "/" + tplname + "_" + m.Usex.UserID.Hex()
-	//delete old content
-	os.RemoveAll(tplUserFolder)
-	os.Mkdir(tplUserFolder, 0775)
+	tplpath := mycrypto.EncodeA(tplname + "_" + m.Usex.Username + mycrypto.StringRand(5))
+	//delete old content if resubmit
+	var oldtpl models.LPTemplate
+	if resubmit {
+		oldtpl, err = m.Rpch.GetLpTemplate(m.Usex.UserID, tplname)
+		if err != nil {
+			return models.RequestResult{Error: err.Error()}
+		}
+		tplpath = oldtpl.Path
+		os.RemoveAll(templateFolder + "/" + tplpath)
+	}
+
+	os.Mkdir(templateFolder+"/"+tplpath, 0775)
 	for k, v := range mfile {
 		//check file folder
 		if strings.Index(k, "/") > 0 {
 			fpath := k[0:strings.LastIndex(k, "/")]
-			os.MkdirAll(tplUserFolder+"/"+fpath, 0775)
+			os.MkdirAll(templateFolder+"/"+tplpath+"/"+fpath, 0775)
 		}
-		err := ioutil.WriteFile(tplUserFolder+"/"+k, v, 0644)
+		err := ioutil.WriteFile(templateFolder+"/"+tplpath+"/"+k, v, 0644)
 		if err != nil {
 			return models.RequestResult{Error: err.Error()}
 		}
@@ -113,20 +160,16 @@ func (m *myRPC) Submit(resubmit bool) models.RequestResult {
 	//update database
 
 	if !resubmit {
-		err := m.Rpch.CreateLpTemplate(m.Usex.UserID, tplname)
+		err := m.Rpch.CreateLpTemplate(m.Usex.UserID, tplname, tplpath)
 		if err != nil {
-			os.RemoveAll(tplUserFolder)
+			os.RemoveAll(templateFolder + "/" + tplpath)
 			return models.RequestResult{Error: err.Error()}
 		}
 	} else {
-		//get template
-		tpl, err := m.Rpch.GetLpTemplate(m.Usex.UserID, tplname)
-		if err != nil {
-			return models.RequestResult{Error: err.Error()}
-		}
+
 		//reset to waiting approve
-		tpl.Status = 2
-		err = m.Rpch.UpdateLpTemplate(tpl)
+		oldtpl.Status = 2
+		err = m.Rpch.UpdateLpTemplate(oldtpl)
 		if err != nil {
 			return models.RequestResult{Error: err.Error()}
 		}
