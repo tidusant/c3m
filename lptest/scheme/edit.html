@@ -241,7 +241,7 @@
     }
     function SubmitTest(){
         document.querySelector("#preloader").classList.remove("hidden")
-        $.post('/test/submit/{{templatename}}',{"data":document.querySelector("div[lp-data-id=landingpage-content]").innerHTML}).done((rs)=>{
+        $.post('/test/submit/{{submiturl}}',{"data":document.querySelector("div[lp-data-id=landingpage-content]").innerHTML}).done((rs)=>{
             console.log(rs)
             try{
                 rs=JSON.parse(rs)

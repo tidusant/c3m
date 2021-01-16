@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/tidusant/c3m/common/mycrypto"
 	log "github.com/tidusant/chadmin-log"
 	"io"
 	"io/ioutil"
@@ -30,22 +31,21 @@ type Nav struct {
 	Name string
 }
 
-func GetTest(c *gin.Context) string {
+func GetTest(sex, tplname string, c *gin.Context) string {
 
-	name := c.Param("params")
-	if name == "" {
+	if tplname == "" {
 		return "Template name empty. "
 
 	}
 	//check template exist
-	tplFolder := rootFolder + "/" + name
+	tplFolder := rootFolder + "/" + tplname
 	if _, err := os.Stat(tplFolder); os.IsNotExist(err) {
 		return "Template not found. "
 
 	}
 
 	//Get tool
-	tools, err := ReadTemplateTool(name)
+	tools, err := ReadTemplateTool(tplname)
 	if err != nil {
 		return err.Error()
 
@@ -95,7 +95,7 @@ func GetTest(c *gin.Context) string {
 `
 		}
 	}
-	toolcontent = strings.Replace(toolcontent, "{{template_path}}", rootPath+"/"+name, -1)
+	toolcontent = strings.Replace(toolcontent, "{{template_path}}", rootPath+"/"+tplname, -1)
 
 	//get  layout content
 	dat, err := ioutil.ReadFile(tplFolder + "/content.html")
@@ -147,12 +147,12 @@ func GetTest(c *gin.Context) string {
 	b, _ := json.Marshal(mtool)
 
 	s = strings.Replace(s, "{{mtoolcontent}}", string(b), 1)
-	s = strings.Replace(s, "{{template_path}}", rootPath+"/"+name, -1)
+	s = strings.Replace(s, "{{template_path}}", rootPath+"/"+tplname, -1)
 
 	//============================nav item============================
 
 	//read nav item template
-	dat, err = ioutil.ReadFile(rootFolder + "/" + name + "/navitem.html")
+	dat, err = ioutil.ReadFile(rootFolder + "/" + tplname + "/navitem.html")
 	if err != nil {
 		return err.Error()
 
@@ -174,7 +174,7 @@ func GetTest(c *gin.Context) string {
 		files, _ := ioutil.ReadDir(tplFolder + "/css")
 		for _, f := range files {
 			if !f.IsDir() {
-				customcss += `<link href="` + rootPath + "/" + name + `/css/` + f.Name() + `" rel="stylesheet">`
+				customcss += `<link href="` + rootPath + "/" + tplname + `/css/` + f.Name() + `" rel="stylesheet">`
 			}
 		}
 	}
@@ -186,13 +186,14 @@ func GetTest(c *gin.Context) string {
 		files, _ := ioutil.ReadDir(tplFolder + "/js")
 		for _, f := range files {
 			if !f.IsDir() {
-				customjs += `<script src="` + rootPath + "/" + name + `/js/` + f.Name() + `"></script>`
+				customjs += `<script src="` + rootPath + "/" + tplname + `/js/` + f.Name() + `"></script>`
 			}
 		}
 	}
 	s = strings.Replace(s, "{{customjs}}", customjs, -1)
 	s = strings.Replace(s, "{{customiframejs}}", strings.Replace(customjs, `</script>`, `<\/script>`, -1), -1)
-	s = strings.Replace(s, "{{templatename}}", name, -1)
+	s = strings.Replace(s, "{{templatename}}", tplname, -1)
+	s = strings.Replace(s, "{{submiturl}}", mycrypto.EncDat2(sex+"|"+tplname), -1)
 	// //Convert your cached html string to byte array
 	// c.Writer.Write([]byte(result))
 	return s

@@ -9,13 +9,11 @@ import (
 	"os"
 )
 
-func SubmitTest(c *gin.Context) string {
+func SubmitTest(sex, tplname string, c *gin.Context) string {
 	content := c.PostForm("data")
-	sex, _ := c.Cookie("_s")
-	templatename := c.Param("params")
 
 	//build content for test
-	buildFolder := rootFolder + "/" + templatename + "/build"
+	buildFolder := rootFolder + "/" + tplname + "/build"
 	os.RemoveAll(buildFolder)
 	err := os.Mkdir(buildFolder, 0775)
 	if err != nil {
@@ -69,7 +67,7 @@ func SubmitTest(c *gin.Context) string {
 	}
 
 	//call test server to purgecss and minify
-	bodystr := c3mcommon.RequestAPI2(lpminserver+"/purge", templatename, sex)
+	bodystr := c3mcommon.RequestAPI2(lpminserver+"/purge", tplname, sex)
 	return bodystr
 	var rs models.RequestResult
 	err = json.Unmarshal([]byte(bodystr), &rs)

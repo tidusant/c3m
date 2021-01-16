@@ -79,39 +79,8 @@
 .landingpage-cursor-pointer{
     cursor: pointer;
 }
-.landingpage-preview-tabletframe{
-    background: url(/scheme/images/tabletframe.svg);
-    height: 1242px;
-    margin: 20px auto;
-    width: 871px;
-    padding-top: 106px;
-    padding-left: 44px;
-}
-.landingpage-tabletframe-content{
-    width: 783px;
-    height: 1038px;
-
-}
-.landingpage-preview-mobileframe{
-    background: url(/scheme/images/mobileframe.svg);
-    height: 707px;
-    margin: 20px auto;
-    width: 370px;
-    padding-top: 105px;
-    padding-left: 19px;
-}
-.landingpage-mobileframe-content{
-    width: 335px;
-    height: 496px;
-
-}
 body.blur-theme {
     margin: 0;
-}
-body.blur-theme::before {
-    position: fixed;
-    background: url(/scheme/images/blur-bg-blurred.jpg) center center no-repeat;
-    background-size: cover;
 }
 body.blur-theme::before, body.mobile.blur-theme .body-bg::before {
     content: '';

@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/tidusant/c3m/common/c3mcommon"
 	"github.com/tidusant/c3m/common/log"
+	"github.com/tidusant/c3m/common/mycrypto"
 	"github.com/tidusant/c3m/repo/models"
 	"math/rand"
 	"net/http"
@@ -77,7 +78,13 @@ func main() {
 
 func HandleTestRoute(c *gin.Context) {
 	//get cookie
-	sex, _ := c.Cookie("_s")
+	args := strings.Split(mycrypto.Decode(c.Param("params")), "|")
+	if len(args) < 2 {
+		c.Writer.WriteString("invalid url")
+		return
+	}
+	sex := args[0]
+	tplname := args[1]
 	log.Debugf("cookies: %+v", sex)
 	c.Writer.WriteHeader(http.StatusOK)
 	if sex == "" {
@@ -121,9 +128,9 @@ func HandleTestRoute(c *gin.Context) {
 	action := c.Param("action")
 	switch action {
 	case "edit":
-		c.Writer.WriteString(GetTest(c))
+		c.Writer.WriteString(GetTest(sex, tplname, c))
 	case "submit":
-		c.Writer.WriteString(SubmitTest(c))
+		c.Writer.WriteString(SubmitTest(sex, tplname, c))
 	}
 
 }
