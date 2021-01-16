@@ -7,6 +7,7 @@ import (
 	"github.com/tidusant/c3m/common/mycrypto"
 	maingrpc "github.com/tidusant/c3m/grpc"
 	pb "github.com/tidusant/c3m/grpc/protoc"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"io/ioutil"
 	"strings"
 
@@ -52,6 +53,10 @@ func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (*pb.RPCResponse,
 			rs = m.Submit(false)
 		} else if m.Usex.Action == "rs" {
 			rs = m.Submit(true)
+		} else if m.Usex.Action == "rej" {
+			rs = m.Reject()
+		} else if m.Usex.Action == "ok" {
+			rs = m.Approve()
 		} else if m.Usex.Action == "lat" {
 			rs = m.LoadAllTest()
 		} else if m.Usex.Action == "la" {
@@ -133,17 +138,6 @@ func (m *myRPC) Submit(resubmit bool) models.RequestResult {
 	mfile := make(map[string][]byte)
 	json.Unmarshal(s, &mfile)
 	tplpath := mycrypto.EncodeA(tplname + "_" + m.Usex.Username + mycrypto.StringRand(2))
-	//delete old content if resubmit
-	var oldtpl models.LPTemplate
-	if resubmit {
-		oldtpl, err = m.Rpch.GetLpTemplate(m.Usex.UserID, tplname)
-		if err != nil {
-			return models.RequestResult{Error: err.Error()}
-		}
-		tplpath = oldtpl.Path
-		os.RemoveAll(templateFolder + "/" + tplpath)
-	}
-
 	os.Mkdir(templateFolder+"/"+tplpath, 0775)
 	for k, v := range mfile {
 		//check file folder
@@ -166,52 +160,66 @@ func (m *myRPC) Submit(resubmit bool) models.RequestResult {
 			return models.RequestResult{Error: err.Error()}
 		}
 	} else {
-
+		oldtpl, err := m.Rpch.GetLpTemplate(m.Usex.UserID, tplname)
 		//reset to waiting approve
 		oldtpl.Status = 2
+		oldtpl.Path = tplpath
 		err = m.Rpch.UpdateLpTemplate(oldtpl)
 		if err != nil {
 			return models.RequestResult{Error: err.Error()}
 		}
 	}
-
 	return models.RequestResult{Status: 1, Data: ""}
-
 }
 
-// func (m *myRPC) Remove(usex models.UserSession) string {
-// 	log.Debugf("remove  %s", m.Usex.Params)
-// 	args := strings.Split(m.Usex.Params, ",")
-// 	if len(args) < 2 {
-// 		return c3mcommon.ReturnJsonMessage("0", "error submit fields", "", "")
-// 	}
-// 	log.Debugf("save prod %s", args)
-// 	code := args[0]
-// 	lang := args[1]
-// 	itemremove := m.Rpch.GetPageByCode(m.Usex.UserID, m.Usex.ShopID, code)
-// 	if itemremove.Langs[lang] != nil {
-// 		//remove slug
-// 		m.Rpch.RemoveSlug(itemremove.Langs[lang].Slug, m.Usex.ShopID)
-// 		delete(itemremove.Langs, lang)
-// 		m.Rpch.SavePage(itemremove)
-// 	}
+func (m *myRPC) Reject() models.RequestResult {
+	if ok, _ := m.Usex.Modules["c3m-lptpl-admin"]; !ok {
+		return models.RequestResult{Error: "permission denied"}
+	}
+	tplID, err := primitive.ObjectIDFromHex(m.Usex.Params)
 
-// 	//build home
-// 	var bs models.BuildScript
-// 	shop := m.Rpch.GetShopById(m.Usex.UserID, m.Usex.ShopID)
-// 	bs.ShopID = m.Usex.ShopID
-// 	bs.TemplateCode = shop.Theme
-// 	bs.Domain = shop.Domain
-// 	bs.ObjectID = "home"
-// 	rpb.CreateBuild(bs)
+	if err != nil {
+		return models.RequestResult{Error: "something wrong"}
+	}
+	oldtpl, err := m.Rpch.GetLpTemplateById(tplID)
+	if err != nil {
+		return models.RequestResult{Error: err.Error()}
+	}
+	//delete content
+	os.RemoveAll(templateFolder + "/" + oldtpl.Path)
 
-// 	//build cat
-// 	bs.Collection = "page"
-// 	bs.ObjectID = itemremove.Code
-// 	rpb.CreateBuild(bs)
-// 	return c3mcommon.ReturnJsonMessage("1", "", "success", "")
+	//update database
+	oldtpl.Status = -1
+	oldtpl.Path = ""
+	err = m.Rpch.UpdateLpTemplate(oldtpl)
+	if err != nil {
+		return models.RequestResult{Error: err.Error()}
+	}
 
-// }
+	return models.RequestResult{Status: 1, Data: ""}
+}
+func (m *myRPC) Approve() models.RequestResult {
+	if ok, _ := m.Usex.Modules["c3m-lptpl-admin"]; !ok {
+		return models.RequestResult{Error: "permission denied"}
+	}
+	tplID, err := primitive.ObjectIDFromHex(m.Usex.Params)
+
+	if err != nil {
+		return models.RequestResult{Error: "something wrong"}
+	}
+	oldtpl, err := m.Rpch.GetLpTemplateById(tplID)
+	if err != nil {
+		return models.RequestResult{Error: err.Error()}
+	}
+	//update database
+	oldtpl.Status = 1
+	err = m.Rpch.UpdateLpTemplate(oldtpl)
+	if err != nil {
+		return models.RequestResult{Error: err.Error()}
+	}
+
+	return models.RequestResult{Status: 1, Data: ""}
+}
 
 func main() {
 	//default port for service

@@ -26,7 +26,7 @@ func (m *MainRPC) InitUsex(ctx context.Context, in *pb.RPCRequest, name, ver str
 
 	m.start = time.Now()
 	rt := ""
-	m.resp = &pb.RPCResponse{Data: "Hello " + in.GetAppName(), RPCName: name, Version: ver}
+	m.resp = &pb.RPCResponse{Data: `{"Status":1,"Data":"Hello ` + in.GetAppName() + `"}`, RPCName: name, Version: ver}
 	//get input data into user session
 	m.ctx = ctx
 	m.Usex.Session = in.Session
@@ -66,12 +66,12 @@ func (m *MainRPC) ReturnRespone(rs models.RequestResult) *pb.RPCResponse {
 	m.resp.Time = time.Since(m.start).String()
 	log.Debugf("query count :%d", m.resp.Query)
 	log.Debugf("query time :%s", m.resp.Time)
-	//log.Debugf("response:%+v", rs)
+
 	return m.resp
 }
 
 func (m *MainRPC) ReturnNilRespone() *pb.RPCResponse {
-
+	log.Debugf("response Nil:%+v", m.resp.Data)
 	m.resp.Query = int32(m.Rpch.QueryCount + m.QueryCount)
 	m.resp.Time = time.Since(m.start).String()
 	return m.resp
