@@ -5,6 +5,6 @@ LABEL maintainer="Duy Ha <duyhph@gmail.com>"
 WORKDIR /app
 # Copy exec file and config
 COPY main ./
-
+COPY scheme ./scheme
 # Run the executable
 CMD ["./main"]
