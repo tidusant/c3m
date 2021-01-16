@@ -140,8 +140,9 @@ func postHandler(c *gin.Context) {
 
 func callgRPC(name string, rpcRequest pb.RPCRequest) models.RequestResult {
 	start := time.Now()
-	rs := models.RequestResult{Error: "service not run, please try again after 5 second"}
+	rs := models.RequestResult{Error: ""}
 	if _, ok := grpcConns[name]; !ok {
+		rs.Error = "Cannot found grpc " + name
 		return rs
 	}
 	// Contact the server and print out its response.
@@ -151,6 +152,7 @@ func callgRPC(name string, rpcRequest pb.RPCRequest) models.RequestResult {
 	if err != nil {
 
 		if strings.Index(err.Error(), "Error while dialing dial") > 0 {
+			rs.Error = "service not run, please try again after 5 second"
 			//delay time to reconnect grpc again
 			go func(name string) {
 				log.Debugf("wait to reconnect %s grpc", name)

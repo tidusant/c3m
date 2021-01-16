@@ -16,6 +16,7 @@ func (r *Repo) UpdateLpTemplate(template models.LPTemplate) error {
 	cond := bson.D{{"_id", template.ID}}
 	update := bson.D{{"$set", bson.D{
 		{"status", template.Status},
+		{"path", template.Path},
 		{"viewed", template.Viewed},
 		{"installed", template.Installed},
 	}}}
@@ -50,6 +51,20 @@ func (r *Repo) GetLpTemplate(userid primitive.ObjectID, templatename string) (mo
 	col := db.Collection("lptemplates")
 	var rs models.LPTemplate
 	cond := bson.M{"userid": userid, "name": templatename}
+	//query
+	err := col.FindOne(ctx, cond).Decode(&rs)
+	r.QueryCount++
+	if err != nil {
+		return rs, err
+	}
+	return rs, nil
+}
+
+func (r *Repo) GetLpTemplateById(tplId primitive.ObjectID) (models.LPTemplate, error) {
+	col := db.Collection("lptemplates")
+	var rs models.LPTemplate
+	cond := bson.M{"_id": tplId}
+
 	//query
 	err := col.FindOne(ctx, cond).Decode(&rs)
 	r.QueryCount++
