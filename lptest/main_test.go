@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/tidusant/c3m/common/mycrypto"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -80,8 +81,15 @@ func TestMain(m *testing.M) {
 }
 
 //test special char
-func TestNoCookie(t *testing.T) {
-	rs := doCall("TestNoCookie", "test/edit/templatename", "", t)
+func TestNoEncryptUrl(t *testing.T) {
+	rs := doCall("TestNoEncryptUrl", "test/edit/templatename", "", t)
+	//check test data
+	if rs != "invalid url" {
+		t.Fatalf("Test fail")
+	}
+}
+func TestNoSession(t *testing.T) {
+	rs := doCall("TestNoSession", "test/edit/"+mycrypto.EncDat2("|template"), "", t)
 	//check test data
 	if rs != "Please login." {
 		t.Fatalf("Test fail")
