@@ -132,7 +132,7 @@ func (m *myRPC) Submit(resubmit bool) models.RequestResult {
 	}
 	mfile := make(map[string][]byte)
 	json.Unmarshal(s, &mfile)
-	tplpath := mycrypto.EncodeA(tplname + "_" + m.Usex.Username + mycrypto.StringRand(5))
+	tplpath := mycrypto.EncodeA(tplname + "_" + m.Usex.Username + mycrypto.StringRand(2))
 	//delete old content if resubmit
 	var oldtpl models.LPTemplate
 	if resubmit {
