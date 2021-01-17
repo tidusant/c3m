@@ -18,8 +18,8 @@ var testsession string = "random"
 var ctx context.Context
 var svc *service
 var appname = "test-grpc-lptemplate"
-var userId = ""
-var shopId = ""
+var userId = primitive.NilObjectID
+var shopId = primitive.NilObjectID
 var shopOriginId = "5955d130e761cf70ffb8e49b" //shopname: demo
 var m myRPC
 
@@ -32,8 +32,8 @@ func setup() {
 	//NOTE: must run auth_test before to have data in db
 	userLogin := m.Rpch.GetLogin(testsession)
 
-	userId = userLogin.UserId.Hex()
-	shopId = userLogin.ShopId.Hex()
+	userId = userLogin.UserId
+	shopId = userLogin.ShopId
 	//change to demoshop
 	shopOriginIdObj, _ := primitive.ObjectIDFromHex(shopOriginId)
 	shopchange := m.Rpch.UpdateShopLogin(testsession, shopOriginIdObj)
@@ -47,21 +47,24 @@ func TestMain(m *testing.M) {
 	exitVal := m.Run()
 	os.Exit(exitVal)
 }
-
-func TestUnknowAction(t *testing.T) {
-	fmt.Println("==== test TestUnknowAction ====")
-	rs, err := svc.Call(ctx, &pb.RPCRequest{AppName: appname, Action: "lasdf", Params: "abc,123", Session: testsession, UserID: userId, ShopID: shopId, UserIP: "127.0.0.1"})
+func doCall(testname, action, params string, t *testing.T) models.RequestResult {
+	fmt.Println("\n\n==== " + testname + " ====")
+	resp, err := svc.Call(ctx, &pb.RPCRequest{AppName: appname, Action: action, Params: params, Session: testsession, UserID: userId.Hex(), ShopID: shopId.Hex(), UserIP: "127.0.0.1"})
 	if err != nil {
 		t.Fatalf("Test fail: Service error: %s", err.Error())
 	}
-	var result models.RequestResult
-	err = json.Unmarshal([]byte(rs.Data), &result)
-	if err != nil {
-		t.Fatalf("Test fail: %s", err.Error())
-	}
+	fmt.Printf("response return: %+v\n", resp)
+	//check test data
+	var rs models.RequestResult
+	json.Unmarshal([]byte(resp.Data), &rs)
+	fmt.Printf("Data return: %+v\n", rs)
+	return rs
+}
+func TestUnknowAction(t *testing.T) {
+	rs := doCall("TestUnknowAction", "lasdf", "abc,123", t)
 	//check test data
 	fmt.Printf("Data return: %+v\n", rs)
-	if result.Data != "Hello "+appname {
+	if rs.Data != "Hello "+appname {
 		t.Fatalf("Test fail: not correct return string")
 	}
 
