@@ -239,7 +239,7 @@ func DecodeOld(code string, div int) string {
 
 	floatNum, _ := strconv.ParseFloat(x2, 64)
 	intNum := (int)(floatNum)
-	//log.Debugf("x :%s", intNum)
+	//log.Debugf("intNum :%s", intNum)
 	if intNum > 0 {
 		//print_r($num);print_r("\r\n");
 		//get odd string
@@ -248,7 +248,7 @@ func DecodeOld(code string, div int) string {
 		oddstr = key[:int(lf)]
 		//log.Debugf("oddstr key[:int(lf)] :%s", oddstr)
 		ukey := strings.Replace(key, oddstr, "", 1)
-		//log.Debugf("ukey Replace(key, oddstr :%s", ukey)
+		//log.Debugf("ukey :%s", ukey)
 		base64str := ""
 
 		for i := len(oddstr) - 1; i >= 0; i-- {
@@ -256,7 +256,7 @@ func DecodeOld(code string, div int) string {
 			oddstr = oddstr[:len(oddstr)-1]
 			checknum := len(ukey) - intNum + 1
 			if checknum > 0 {
-				base64str += mystring.Reverse(string(ukey[checknum]))
+				base64str += mystring.Reverse(string(ukey[checknum:]))
 			} else {
 				base64str += mystring.Reverse(ukey)
 			}
