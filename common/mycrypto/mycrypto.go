@@ -254,13 +254,14 @@ func DecodeOld(code string, div int) string {
 		for i := len(oddstr) - 1; i >= 0; i-- {
 			base64str += string(oddstr[len(oddstr)-1:])
 			oddstr = oddstr[:len(oddstr)-1]
-			if len(ukey)-intNum+1 > 0 {
-				base64str += mystring.Reverse(string(ukey[len(ukey)-intNum+1:]))
+			checknum := len(ukey) - intNum + 1
+			if checknum > 0 {
+				base64str += mystring.Reverse(string(ukey[checknum]))
 			} else {
 				base64str += mystring.Reverse(ukey)
 			}
 			if i > 0 {
-				ukey = ukey[:len(ukey)-intNum+1]
+				ukey = ukey[:checknum]
 			}
 		}
 		//log.Debugf("base64str :%s", base64str)
