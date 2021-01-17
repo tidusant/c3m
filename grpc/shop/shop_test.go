@@ -66,11 +66,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestUnknowAction(t *testing.T) {
-	fmt.Println("==== test TestUnknowAction ====")
-	rs, err := svc.Call(ctx, &pb.RPCRequest{AppName: appname, Action: "lasdf", Params: "abc,123", Session: testsession, UserID: userId.Hex(), ShopID: shopId.Hex(), UserIP: "127.0.0.1"})
-	if err != nil {
-		t.Fatalf("Test fail: Service error: %s", err.Error())
-	}
+	rs := doCall("TestUnknowAction", "lasdf", "abc,123", t)
 	//check test data
 	fmt.Printf("Data return: %+v\n", rs)
 	if rs.Data != "Hello "+appname {
