@@ -33,7 +33,7 @@ type Auth struct {
 
 func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (*pb.RPCResponse, error) {
 	start := time.Now()
-	resp := &pb.RPCResponse{Data: "Hello " + in.GetAppName(), RPCName: name, Version: ver}
+	resp := &pb.RPCResponse{Data: `{"Status":1,"Data":"Hello ` + in.GetAppName() + `"}`, RPCName: name, Version: ver}
 	rs := models.RequestResult{}
 	a := Auth{}
 	//get input data into user session
