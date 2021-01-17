@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	pb "github.com/tidusant/c3m/grpc/protoc"
+	"github.com/tidusant/c3m/repo/models"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"fmt"
@@ -52,9 +54,14 @@ func TestUnknowAction(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Test fail: Service error: %s", err.Error())
 	}
+	var result models.RequestResult
+	err = json.Unmarshal([]byte(rs.Data), &result)
+	if err != nil {
+		t.Fatalf("Test fail: %s", err.Error())
+	}
 	//check test data
 	fmt.Printf("Data return: %+v\n", rs)
-	if rs.Data != "Hello "+appname {
+	if result.Data != "Hello "+appname {
 		t.Fatalf("Test fail: not correct return string")
 	}
 
