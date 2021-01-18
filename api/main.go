@@ -199,7 +199,7 @@ func myRoute(c *gin.Context) models.RequestResult {
 
 	datargs := strings.Split(mycrypto.Decode(data), "|")
 	session := mycrypto.Decode(datargs[0])
-	log.Debugf("total decode time:%s", time.Since(start))
+	log.Debugf("datargs:%+v", datargs)
 
 	requestAction := ""
 	requestParams := ""
