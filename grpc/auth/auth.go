@@ -32,6 +32,7 @@ type Auth struct {
 }
 
 func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (*pb.RPCResponse, error) {
+	log.Debugf("action:%s - userid:%s - group:%s - modules:%+v", in.Action, in.UserID, in.Group, in.Modules)
 	start := time.Now()
 	resp := &pb.RPCResponse{Data: `{"Status":1,"Data":"Hello ` + in.GetAppName() + `"}`, RPCName: name, Version: ver}
 	rs := models.RequestResult{}
@@ -121,7 +122,7 @@ func (a *Auth) install(usex models.UserSession) models.RequestResult {
 		userId := args[2]
 		userEmail := args[3]
 		if orgId != "" && userId != "" {
-			a.rpch.InstallSaleForce(orgId, orgName, userEmail)
+			a.rpch.InstallSaleForce(orgId, orgName, userEmail, usex.AppName)
 			return models.RequestResult{
 				Error:   "",
 				Status:  1,

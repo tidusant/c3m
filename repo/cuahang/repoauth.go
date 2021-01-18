@@ -25,11 +25,13 @@ func (r *Repo) GetUserInfo(UserId primitive.ObjectID) models.User {
 	r.QueryTime += time.Since(start)
 	return rs
 }
-func (r *Repo) InstallSaleForce(OrgID, OrgName, UserEmail string) bool {
+func (r *Repo) InstallSaleForce(OrgID, OrgName, UserEmail, app string) bool {
 	start := time.Now()
 	col := db.Collection("addons_users")
 	rs := true
-	_, err := col.InsertOne(ctx, bson.M{"user": OrgID, "name": OrgName, "email": UserEmail})
+	hash := md5.Sum([]byte(OrgID + `-` + app))
+	passmd5 := hex.EncodeToString(hash[:])
+	_, err := col.InsertOne(ctx, bson.M{"user": OrgID, "name": OrgName, "email": UserEmail, "group": "salesforce", "modules": "c3m-lptpl-user", "password": passmd5, "active": 1})
 	if err != nil {
 		c3mcommon.CheckError("InstallSaleForce ", err)
 		rs = false
