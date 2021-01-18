@@ -245,7 +245,11 @@ func myRoute(c *gin.Context) models.RequestResult {
 					//save userinfo int session
 					SaveSession(&pbses.SessionMessage{Session: session, UserID: data["userid"], UserName: data["username"], ShopID: data["shopid"], Group: data["group"], Modules: data["modules"]})
 					//remove userid & shopid in reply
-					reply.Data = fmt.Sprintf(`{"username":"%s","group":"%s","modules":"%s"}`, data["username"], data["group"], data["modules"])
+					if AppName == `sf` {
+						reply.Data = fmt.Sprintf(`{"sex":"%s","username":"%s","group":"%s","modules":"%s","shop":"%s"}`, session, data["username"], data["group"], data["modules"], data["shopid"])
+					} else {
+						reply.Data = fmt.Sprintf(`{"username":"%s","group":"%s","modules":"%s","shop":"%s"}`, data["username"], data["group"], data["modules"], data["shopid"])
+					}
 				}
 			}
 		}
