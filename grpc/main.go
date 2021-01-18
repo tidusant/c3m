@@ -31,6 +31,7 @@ func (m *MainRPC) InitUsex(ctx context.Context, in *pb.RPCRequest, name, ver str
 	m.ctx = ctx
 	m.Usex.Session = in.Session
 	m.Usex.Action = in.Action
+	m.Usex.AppName = in.AppName
 	m.Usex.UserIP = in.UserIP
 	m.Usex.Group = in.Group
 	m.Usex.Params = in.Params

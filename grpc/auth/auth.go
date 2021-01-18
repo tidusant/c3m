@@ -40,12 +40,16 @@ func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (*pb.RPCResponse,
 	var usex models.UserSession
 	usex.Session = in.Session
 	usex.Action = in.Action
-
+	usex.AppName = in.AppName
 	usex.UserIP = in.UserIP
 	usex.Params = in.Params
 	usex.UserID, _ = primitive.ObjectIDFromHex(in.UserID)
 	if usex.Action == "l" {
 		rs = a.login(usex)
+	} else if usex.Action == "i" {
+		rs = a.install(usex)
+		//} else if usex.Action == "aut" {
+		//	rs = a.auth(usex)
 	} else if usex.Action == "lo" {
 		rs = a.logout(usex.Session)
 		//} else if usex.Action == "aut" {
@@ -104,6 +108,29 @@ func (a *Auth) logout(session string) models.RequestResult {
 	a.rpch.Logout(session)
 	return models.RequestResult{Error: "", Status: 1, Message: "Logout success"}
 
+}
+
+func (a *Auth) install(usex models.UserSession) models.RequestResult {
+	args := strings.Split(usex.Params, ",")
+	if usex.AppName == "sf" {
+		if len(args) < 4 {
+			return models.RequestResult{Error: "invalid install"}
+		}
+		orgId := args[0]
+		orgName := args[1]
+		userId := args[2]
+		userEmail := args[3]
+		if orgId != "" && userId != "" {
+			a.rpch.InstallSaleForce(orgId, orgName, userEmail)
+			return models.RequestResult{
+				Error:   "",
+				Status:  1,
+				Message: "",
+				Data:    ``}
+
+		}
+	}
+	return models.RequestResult{Error: "invalid app"}
 }
 func main() {
 	//default port for service

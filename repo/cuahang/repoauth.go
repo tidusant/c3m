@@ -25,6 +25,19 @@ func (r *Repo) GetUserInfo(UserId primitive.ObjectID) models.User {
 	r.QueryTime += time.Since(start)
 	return rs
 }
+func (r *Repo) InstallSaleForce(OrgID, OrgName, UserEmail string) bool {
+	start := time.Now()
+	col := db.Collection("addons_users")
+	rs := true
+	_, err := col.InsertOne(ctx, bson.M{"user": OrgID, "name": OrgName, "email": UserEmail})
+	if err != nil {
+		c3mcommon.CheckError("InstallSaleForce ", err)
+		rs = false
+	}
+	r.QueryCount++
+	r.QueryTime += time.Since(start)
+	return rs
+}
 
 //get user login by session and return current shop and user id
 func (r *Repo) GetLogin(session string) models.UserLogin {

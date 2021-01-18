@@ -9,6 +9,7 @@ type UserSession struct {
 	Session  string
 	UserID   primitive.ObjectID
 	Action   string
+	AppName  string
 	Params   string
 	ShopID   primitive.ObjectID
 	UserIP   string
