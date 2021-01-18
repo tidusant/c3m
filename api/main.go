@@ -212,7 +212,7 @@ func myRoute(c *gin.Context) models.RequestResult {
 
 	//get rpc call name from first arg
 	log.Debugf("session: %+v", session)
-	log.Debugf("RPCname:%s, action:%s", RPCname, requestAction)
+	log.Debugf("RPCname:%s, action:%s, app:%s", RPCname, requestAction, AppName)
 	if RPCname == "CreateSex" {
 		//create session string and save it into db
 		//data = rpsex.CreateSession()
@@ -234,21 +234,20 @@ func myRoute(c *gin.Context) models.RequestResult {
 	log.Debugf("session found: %+v", sex)
 	reply := models.RequestResult{Error: ""}
 	if RPCname == "aut" {
-		if requestAction == "l" {
-			reply = callgRPC("aut", pb.RPCRequest{AppName: AppName, Action: requestAction, Params: requestParams, Session: session, UserIP: userIP})
-			if reply.Status == 1 {
-				var data map[string]string
-				c3mcommon.CheckError("parse login response", json.Unmarshal([]byte(reply.Data), &data))
-				//save userinfo int session
-				SaveSession(&pbses.SessionMessage{Session: session, UserID: data["userid"], UserName: data["username"], ShopID: data["shopid"], Group: data["group"], Modules: data["modules"]})
-				//remove userid & shopid in reply
-				reply.Data = fmt.Sprintf(`{"username":"%s","group":"%s","modules":"%s"}`, data["username"], data["group"], data["modules"])
-			}
-
-		} else if RPCname == "aut" && requestAction == "t" {
+		if requestAction == "t" {
 			reply = models.RequestResult{Status: 1, Error: "", Data: `{"sex":"` + session + `","username":"` + sex.UserName + `","shop":"` + sex.ShopID + `","group":"` + sex.Group + `","modules":"` + sex.Modules + `"}`}
 		} else {
 			reply = callgRPC("aut", pb.RPCRequest{AppName: AppName, Action: requestAction, Params: requestParams, Session: session, UserIP: userIP})
+			if reply.Status == 1 {
+				if requestAction == "l" {
+					var data map[string]string
+					c3mcommon.CheckError("parse login response", json.Unmarshal([]byte(reply.Data), &data))
+					//save userinfo int session
+					SaveSession(&pbses.SessionMessage{Session: session, UserID: data["userid"], UserName: data["username"], ShopID: data["shopid"], Group: data["group"], Modules: data["modules"]})
+					//remove userid & shopid in reply
+					reply.Data = fmt.Sprintf(`{"username":"%s","group":"%s","modules":"%s"}`, data["username"], data["group"], data["modules"])
+				}
+			}
 		}
 		return reply
 	}
