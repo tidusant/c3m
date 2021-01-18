@@ -191,6 +191,10 @@ func myRoute(c *gin.Context) models.RequestResult {
 	//decode request name and get array of args
 	args := strings.Split(mycrypto.Decode(name), "|")
 	RPCname := args[0]
+	AppName := "admin-portal"
+	if len(args) > 1 {
+		AppName = args[1]
+	}
 	//decode request data from Form and get array of args
 
 	datargs := strings.Split(mycrypto.Decode(data), "|")
@@ -231,7 +235,7 @@ func myRoute(c *gin.Context) models.RequestResult {
 	reply := models.RequestResult{Error: ""}
 	if RPCname == "aut" {
 		if requestAction == "l" {
-			reply = callgRPC("aut", pb.RPCRequest{AppName: "admin-portal", Action: requestAction, Params: requestParams, Session: session, UserIP: userIP})
+			reply = callgRPC("aut", pb.RPCRequest{AppName: AppName, Action: requestAction, Params: requestParams, Session: session, UserIP: userIP})
 			if reply.Status == 1 {
 				var data map[string]string
 				c3mcommon.CheckError("parse login response", json.Unmarshal([]byte(reply.Data), &data))
@@ -243,6 +247,8 @@ func myRoute(c *gin.Context) models.RequestResult {
 
 		} else if RPCname == "aut" && requestAction == "t" {
 			reply = models.RequestResult{Status: 1, Error: "", Data: `{"sex":"` + session + `","username":"` + sex.UserName + `","shop":"` + sex.ShopID + `","group":"` + sex.Group + `","modules":"` + sex.Modules + `"}`}
+		} else {
+			reply = callgRPC("aut", pb.RPCRequest{AppName: AppName, Action: requestAction, Params: requestParams, Session: session, UserIP: userIP})
 		}
 		return reply
 	}
@@ -255,7 +261,7 @@ func myRoute(c *gin.Context) models.RequestResult {
 
 	if RPCname == "shop" && requestAction == "cs" {
 		//change shop
-		reply = callgRPC(RPCname, pb.RPCRequest{AppName: "admin-portal", Action: requestAction, Params: requestParams, Session: session, UserID: sex.UserID, UserIP: userIP, ShopID: sex.ShopID, Group: sex.Group, Username: sex.UserName, Modules: sex.Modules})
+		reply = callgRPC(RPCname, pb.RPCRequest{AppName: AppName, Action: requestAction, Params: requestParams, Session: session, UserID: sex.UserID, UserIP: userIP, ShopID: sex.ShopID, Group: sex.Group, Username: sex.UserName, Modules: sex.Modules})
 		if reply.Status == 1 {
 			//update session
 			sex.ShopID = requestParams
@@ -270,7 +276,7 @@ func myRoute(c *gin.Context) models.RequestResult {
 	log.Debugf("RPCname: %s", RPCname)
 	//time.Sleep(0 * time.Second)
 
-	reply = callgRPC(RPCname, pb.RPCRequest{AppName: "admin-portal", Action: requestAction, Params: requestParams, Session: session, UserID: sex.UserID, UserIP: userIP, ShopID: sex.ShopID, Group: sex.Group, Username: sex.UserName, Modules: sex.Modules})
+	reply = callgRPC(RPCname, pb.RPCRequest{AppName: AppName, Action: requestAction, Params: requestParams, Session: session, UserID: sex.UserID, UserIP: userIP, ShopID: sex.ShopID, Group: sex.Group, Username: sex.UserName, Modules: sex.Modules})
 	log.Debugf("total time:%s", time.Since(start))
 
 	return reply
