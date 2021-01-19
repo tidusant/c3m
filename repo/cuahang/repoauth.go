@@ -32,12 +32,12 @@ func (r *Repo) AddSFUser(OrgID, SFUserID, UserEmail string) bool {
 	rs := true
 	opts := options.Update().SetUpsert(true)
 	filter := bson.D{{"sfuserid", SFUserID}}
-	update := bson.D{{"$set", bson.D{
-		{"email", UserEmail},
-		{"orgid", OrgID},
-		{"sfuserid", SFUserID},
-		{"lastlogin", time.Now()},
-	}}}
+	update := bson.M{"$set": bson.M{
+		"email":     UserEmail,
+		"orgid":     OrgID,
+		"sfuserid":  SFUserID,
+		"lastlogin": time.Now(),
+	}}
 
 	_, err := col.UpdateOne(ctx, filter, update, opts)
 	if err != nil {
