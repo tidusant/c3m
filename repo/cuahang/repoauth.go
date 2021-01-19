@@ -6,6 +6,7 @@ import (
 	"github.com/tidusant/c3m/common/c3mcommon"
 	"github.com/tidusant/c3m/common/log"
 	"github.com/tidusant/c3m/repo/models"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"gopkg.in/mgo.v2/bson"
@@ -21,6 +22,28 @@ func (r *Repo) GetUserInfo(UserId primitive.ObjectID) models.User {
 	col := db.Collection("addons_users")
 	var rs models.User
 	col.FindOne(ctx, bson.M{"_id": UserId}).Decode(&rs)
+	r.QueryCount++
+	r.QueryTime += time.Since(start)
+	return rs
+}
+func (r *Repo) AddSFUser(OrgID, SFUserID, UserEmail string) bool {
+	start := time.Now()
+	col := db.Collection("addons_sfusers")
+	rs := true
+	opts := options.Update().SetUpsert(true)
+	filter := bson.D{{"sfuserid", SFUserID}}
+	update := bson.D{{"$set", bson.D{
+		{"email", UserEmail},
+		{"orgid", OrgID},
+		{"sfuserid", SFUserID},
+		{"lastlogin", time.Now()},
+	}}}
+
+	_, err := col.UpdateOne(ctx, filter, update, opts)
+	if err != nil {
+		c3mcommon.CheckError("AddSFUser ", err)
+		rs = false
+	}
 	r.QueryCount++
 	r.QueryTime += time.Since(start)
 	return rs

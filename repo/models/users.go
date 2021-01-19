@@ -27,6 +27,13 @@ type User struct {
 	Modules string             `bson:"modules"`
 	ShopId  primitive.ObjectID `bson:"shopid"`
 }
+type SFUser struct {
+	ID        primitive.ObjectID `bson:"_id,omitempty"`
+	SFUserID  string             `bson:"sfuserid"`
+	Email     string             `bson:"email"`
+	OrgID     string             `bson:"orgid"`
+	LastLogin time.Time          `bson:"lastlogin"`
+}
 
 type UserConfig struct {
 	Level     int `bson:"level"`

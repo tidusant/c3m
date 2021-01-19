@@ -85,14 +85,25 @@ func (a *Auth) login(usex models.UserSession) models.RequestResult {
 	if len(args) < 2 {
 		return models.RequestResult{Error: "empty username or pass"}
 	}
+
 	username := args[0]
 	pass := args[1]
+	if usex.AppName == `sf` && len(args) < 4 {
+		return models.RequestResult{Error: "empty username or pass"}
+	}
+
 	user := a.rpch.Login(username, pass, usex.Session, usex.UserIP)
 	if user.Name != "" {
 		//get shop default
 		if user.ShopId == primitive.NilObjectID {
 			shop := a.rpch.GetShopDefault(user.ID)
 			user.ShopId = shop.ID
+		}
+		//insert new SF user
+		if usex.AppName == "sf" {
+			SFuserId := args[2]
+			SFUserEmail := args[3]
+			a.rpch.AddSFUser(username, SFuserId, SFUserEmail)
 		}
 		return models.RequestResult{
 			Error:   "",
