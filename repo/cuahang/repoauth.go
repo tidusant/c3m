@@ -31,7 +31,7 @@ func (r *Repo) AddSFUser(OrgID, SFUserID, UserEmail string) bool {
 	col := db.Collection("addons_sfusers")
 	rs := true
 	opts := options.Update().SetUpsert(true)
-	filter := bson.D{{"sfuserid", SFUserID}}
+	filter := bson.M{"sfuserid": SFUserID}
 	update := bson.M{"$set": bson.M{
 		"email":     UserEmail,
 		"orgid":     OrgID,
