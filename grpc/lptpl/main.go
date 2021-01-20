@@ -60,7 +60,9 @@ func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (*pb.RPCResponse,
 		} else if m.Usex.Action == "lat" {
 			rs = m.LoadAllTest()
 		} else if m.Usex.Action == "la" {
-			rs = m.LoadAll()
+			rs = m.LoadForBuilder()
+		} else if m.Usex.Action == "latpl" {
+			rs = m.LoadForUser()
 		} else {
 			//unknow action
 			return m.ReturnNilRespone(), nil
@@ -68,6 +70,8 @@ func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (*pb.RPCResponse,
 	}
 	return m.ReturnRespone(rs), nil
 }
+
+//load all template for test and approve
 func (m *myRPC) LoadAllTest() models.RequestResult {
 	if ok, _ := m.Usex.Modules["c3m-lptpl-admin"]; !ok {
 		return models.RequestResult{Error: "permission denied"}
@@ -97,11 +101,26 @@ func (m *myRPC) LoadAllTest() models.RequestResult {
 	}
 	return models.RequestResult{Status: 1, Data: string(b)}
 }
-func (m *myRPC) LoadAll() models.RequestResult {
+
+//load all template for builder
+func (m *myRPC) LoadForBuilder() models.RequestResult {
 	if ok, _ := m.Usex.Modules["c3m-lptpl-builder"]; !ok {
 		return models.RequestResult{Error: "permission denied"}
 	}
 	templates, err := m.Rpch.GetAllLpTemplate(m.Usex.UserID, false)
+	if err != nil {
+		return models.RequestResult{Error: err.Error()}
+	}
+	b, _ := json.Marshal(templates)
+	return models.RequestResult{Status: 1, Data: string(b)}
+}
+
+//load all template for user
+func (m *myRPC) LoadForUser() models.RequestResult {
+	if ok, _ := m.Usex.Modules["c3m-lptpl-user"]; !ok {
+		return models.RequestResult{Error: "permission denied"}
+	}
+	templates, err := m.Rpch.GetAllLpForUser()
 	if err != nil {
 		return models.RequestResult{Error: err.Error()}
 	}

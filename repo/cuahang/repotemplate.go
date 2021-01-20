@@ -102,3 +102,29 @@ func (r *Repo) GetAllLpTemplate(userid primitive.ObjectID, isAdmin bool) ([]mode
 	}
 	return rs, nil
 }
+func (r *Repo) GetAllLpForUser() ([]models.LP4User, error) {
+	col := db.Collection("lptemplates")
+	var rs []models.LP4User
+	cond := bson.M{}
+	cond["status"] = 1
+
+	cursor, err := col.Aggregate(ctx, mongo.Pipeline{
+		bson.D{{"$match", cond}},
+		bson.D{{"$lookup", bson.D{{"from", "addons_users"}, {"localField", "userid"}, {"foreignField", "_id"}, {"as", "user"}}}},
+		bson.D{{"$unwind", bson.D{{"path", "$user"}, {"preserveNullAndEmptyArrays", false}}}},
+		bson.D{{"$addFields", bson.D{
+			{"user", "$user.user"},
+		}}},
+		bson.D{{"$sort", bson.D{
+			{"_id", -1},
+		}}},
+	})
+
+	//query
+	//cursor, err := col.Find(ctx, cond)
+	r.QueryCount++
+	if err = cursor.All(ctx, &rs); err != nil {
+		return rs, err
+	}
+	return rs, nil
+}

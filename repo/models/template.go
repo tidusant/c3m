@@ -20,6 +20,14 @@ type LPTemplate struct {
 	Created     time.Time          `bson:"created"`
 	User        string             `bson:"user"`
 }
+type LP4User struct {
+	ID        primitive.ObjectID `bson:"_id,omitempty"`
+	Path      string             `bson:"path"`
+	Name      string             `bson:"name"`
+	Viewed    int                `bson:"viewed"`
+	Installed int                `bson:"installed"`
+	User      string             `bson:"user"`
+}
 type Template struct {
 	ID           bson.ObjectId `bson:"_id,omitempty"`
 	Code         string        `bson:"code"`
