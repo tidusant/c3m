@@ -9,6 +9,7 @@ import (
 	pb "github.com/tidusant/c3m/grpc/protoc"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"io/ioutil"
+	"path/filepath"
 	"strings"
 
 	"context"
@@ -59,6 +60,8 @@ func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (*pb.RPCResponse,
 			rs = m.Approve()
 		} else if m.Usex.Action == "lat" {
 			rs = m.LoadAllTest()
+		} else if m.Usex.Action == "ltpl" {
+			rs = m.LoadTemplate()
 		} else if m.Usex.Action == "la" {
 			rs = m.LoadForBuilder()
 		} else if m.Usex.Action == "latpl" {
@@ -241,6 +244,56 @@ func (m *myRPC) Approve() models.RequestResult {
 	}
 
 	return models.RequestResult{Status: 1, Data: ""}
+}
+
+func (m *myRPC) LoadTemplate() models.RequestResult {
+	if ok, _ := m.Usex.Modules["c3m-lptpl-builder"]; !ok {
+		return models.RequestResult{Error: "permission denied"}
+	}
+	tplID, err := primitive.ObjectIDFromHex(m.Usex.Params)
+
+	if err != nil {
+		return models.RequestResult{Error: "something wrong"}
+	}
+	tpl, err := m.Rpch.GetLpTemplateById(tplID)
+	if err != nil {
+		return models.RequestResult{Error: err.Error()}
+	}
+	if tpl.Status != 1 {
+		return models.RequestResult{Error: "something wrong"}
+	}
+	mfile := make(map[string][]byte)
+
+	walker := func(path string, info os.FileInfo, err error) error {
+		//skip folder images
+		log.Debugf(path)
+		if strings.Index(strings.Replace(path, "templates/"+tpl.Path+"/", "", 1), `images/`) == 0 {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		b, err := ioutil.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		mfile[strings.Replace(path, "templates/"+tpl.Path+"/", "", 1)] = b
+		return nil
+	}
+	err = filepath.Walk(templateFolder+"/"+tpl.Path+"/", walker)
+	if err != nil {
+		return models.RequestResult{Error: err.Error()}
+	}
+
+	b, _ := json.Marshal(mfile)
+	if err != nil {
+		return models.RequestResult{Error: err.Error()}
+	}
+
+	return models.RequestResult{Status: 1, Data: string(b)}
 }
 
 func main() {
