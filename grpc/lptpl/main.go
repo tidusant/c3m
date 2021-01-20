@@ -247,7 +247,7 @@ func (m *myRPC) Approve() models.RequestResult {
 }
 
 func (m *myRPC) LoadTemplate() models.RequestResult {
-	if ok, _ := m.Usex.Modules["c3m-lptpl-builder"]; !ok {
+	if ok, _ := m.Usex.Modules["c3m-lptpl-user"]; !ok {
 		return models.RequestResult{Error: "permission denied"}
 	}
 	tplID, err := primitive.ObjectIDFromHex(m.Usex.Params)
@@ -266,7 +266,7 @@ func (m *myRPC) LoadTemplate() models.RequestResult {
 
 	walker := func(path string, info os.FileInfo, err error) error {
 		//skip folder images
-		log.Debugf(path)
+
 		if strings.Index(strings.Replace(path, "templates/"+tpl.Path+"/", "", 1), `images/`) == 0 {
 			return nil
 		}
