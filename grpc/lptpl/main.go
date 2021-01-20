@@ -121,6 +121,9 @@ func (m *myRPC) LoadForUser() models.RequestResult {
 		return models.RequestResult{Error: "permission denied"}
 	}
 	templates, err := m.Rpch.GetAllLpForUser()
+	for k, _ := range templates {
+		templates[k].Path = `/templates/` + templates[k].Path
+	}
 	if err != nil {
 		return models.RequestResult{Error: err.Error()}
 	}

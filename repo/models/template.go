@@ -20,13 +20,24 @@ type LPTemplate struct {
 	Created     time.Time          `bson:"created"`
 	User        string             `bson:"user"`
 }
+type LandingPage struct {
+	ID         primitive.ObjectID `bson:"_id,omitempty"`
+	Path       string             `bson:"path"`
+	Name       string             `bson:"name"`
+	CampaignID string             `bson:"campaignid"`
+	UserID     primitive.ObjectID `bson:userid`
+	Viewed     int                `bson:"viewed"`
+	Submitted  int                `bson:'submitted'`
+	Created    time.Time          `bson:"created"`
+}
 type LP4User struct {
 	ID        primitive.ObjectID `bson:"_id,omitempty"`
 	Path      string             `bson:"path"`
 	Name      string             `bson:"name"`
 	Viewed    int                `bson:"viewed"`
 	Installed int                `bson:"installed"`
-	User      string             `bson:"user"`
+	Designer  string             `bson:"user"`
+	Created   time.Time          `bson:"created"`
 }
 type Template struct {
 	ID           bson.ObjectId `bson:"_id,omitempty"`
