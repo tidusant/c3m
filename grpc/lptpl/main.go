@@ -354,8 +354,9 @@ func (m *myRPC) LoadTemplate() models.RequestResult {
 				return err
 			}
 			mfile[strings.Replace(path, "templates/"+tpl.Path+"/", "", 1)] = string(b)
-			return nil
+
 		}
+		return nil
 	}
 	err = filepath.Walk(templateFolder+"/"+tpl.Path+"/", walker)
 	if err != nil {
