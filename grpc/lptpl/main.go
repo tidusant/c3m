@@ -337,7 +337,7 @@ func (m *myRPC) LoadTemplate() models.RequestResult {
 		return models.RequestResult{Error: "something wrong"}
 	}
 
-	mfile := make(map[string]string)
+	mfile := make(map[string][]byte)
 	tmplFolder := templateFolder + `/` + tpl.Path
 	walker := func(path string, info os.FileInfo, err error) error {
 		//skip folder images
@@ -353,7 +353,7 @@ func (m *myRPC) LoadTemplate() models.RequestResult {
 			if err != nil {
 				return err
 			}
-			mfile[strings.Replace(path, "templates/"+tpl.Path+"/", "", 1)] = string(b)
+			mfile[strings.Replace(path, "templates/"+tpl.Path+"/", "", 1)] = b
 
 		}
 		return nil
