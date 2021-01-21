@@ -335,47 +335,6 @@ func (m *myRPC) LoadTemplate() models.RequestResult {
 	if tpl.Status != 1 {
 		return models.RequestResult{Error: "something wrong"}
 	}
-	//mfile := make(map[string][]byte)
-	//
-	//walker := func(path string, info os.FileInfo, err error) error {
-	//	//skip folder images
-	//
-	//	if strings.Index(strings.Replace(path, "templates/"+tpl.Path+"/", "", 1), `images/`) == 0 {
-	//		return nil
-	//	}
-	//	if err != nil {
-	//		return err
-	//	}
-	//	if info.IsDir() {
-	//		return nil
-	//	}
-	//	b, err := ioutil.ReadFile(path)
-	//	if err != nil {
-	//		return err
-	//	}
-	//	mfile[strings.Replace(path, "templates/"+tpl.Path+"/", "", 1)] = b
-	//	return nil
-	//}
-	//err = filepath.Walk(templateFolder+"/"+tpl.Path+"/", walker)
-	//if err != nil {
-	//	return models.RequestResult{Error: err.Error()}
-	//}
-
-	//b, _ := json.Marshal(mfile)
-	//if err != nil {
-	//	return models.RequestResult{Error: err.Error()}
-	//}
-
-	// marshal and gzip
-	//bfile, err := json.Marshal(mfile)
-	//if err != nil {
-	//	return models.RequestResult{Error: err.Error()}
-	//}
-	//var bb bytes.Buffer
-	//w := gzip.NewWriter(&bb)
-	//w.Write(bfile)
-	//w.Close()
-	//b := base64.StdEncoding.EncodeToString(bb.Bytes())
 
 	b2, err := ioutil.ReadFile(templateFolder + "/" + tpl.Path + ".zip")
 	b := base64.StdEncoding.EncodeToString(b2)
