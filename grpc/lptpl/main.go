@@ -320,7 +320,7 @@ func (m *myRPC) Approve() models.RequestResult {
 }
 
 func (m *myRPC) LoadTemplate() models.RequestResult {
-	if ok, _ := m.Usex.Modules["c3m-lptpl-builder"]; !ok {
+	if ok, _ := m.Usex.Modules["c3m-lptpl-user"]; !ok {
 		return models.RequestResult{Error: "permission denied"}
 	}
 	tplID, err := primitive.ObjectIDFromHex(m.Usex.Params)
