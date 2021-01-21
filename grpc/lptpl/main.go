@@ -270,40 +270,41 @@ func (m *myRPC) Approve() models.RequestResult {
 		}
 		//skip folder images
 
-		if strings.Index(path, tmplFolder+"/images") == 0 || path == tmplFolder+"/images" {
-			return nil
-		}
-		header, err := zip.FileInfoHeader(info)
-		if err != nil {
+		if path == tmplFolder+"/content.html" || path == tmplFolder+"/items.html" || path == tmplFolder+"/navitem.html" || strings.Index(path, tmplFolder+"/css") == 0 || strings.Index(path, tmplFolder+"/js") == 0 || strings.Index(path, tmplFolder+"/itemicons") == 0 {
+
+			header, err := zip.FileInfoHeader(info)
+			if err != nil {
+				return err
+			}
+
+			if baseDir != "" {
+				header.Name = filepath.Join(baseDir, strings.TrimPrefix(path, tmplFolder))
+			}
+
+			if info.IsDir() {
+				header.Name += "/"
+			} else {
+				header.Method = zip.Deflate
+			}
+
+			writer, err := archive.CreateHeader(header)
+			if err != nil {
+				return err
+			}
+
+			if info.IsDir() {
+				return nil
+			}
+
+			file, err := os.Open(path)
+			if err != nil {
+				return err
+			}
+			defer file.Close()
+			_, err = io.Copy(writer, file)
 			return err
 		}
-
-		if baseDir != "" {
-			header.Name = filepath.Join(baseDir, strings.TrimPrefix(path, tmplFolder))
-		}
-
-		if info.IsDir() {
-			header.Name += "/"
-		} else {
-			header.Method = zip.Deflate
-		}
-
-		writer, err := archive.CreateHeader(header)
-		if err != nil {
-			return err
-		}
-
-		if info.IsDir() {
-			return nil
-		}
-
-		file, err := os.Open(path)
-		if err != nil {
-			return err
-		}
-		defer file.Close()
-		_, err = io.Copy(writer, file)
-		return err
+		return nil
 	})
 	if err != nil {
 		return models.RequestResult{Error: err.Error()}
