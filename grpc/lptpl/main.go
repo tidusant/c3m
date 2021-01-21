@@ -337,8 +337,38 @@ func (m *myRPC) LoadTemplate() models.RequestResult {
 		return models.RequestResult{Error: "something wrong"}
 	}
 
-	b2, err := ioutil.ReadFile(templateFolder + "/" + tpl.Path + ".zip")
-	b := base64.StdEncoding.EncodeToString(b2)
+	mfile := make(map[string]string)
+	tmplFolder := templateFolder + `/` + tpl.Path
+	walker := func(path string, info os.FileInfo, err error) error {
+		//skip folder images
+
+		if path == tmplFolder+"/content.html" || path == tmplFolder+"/items.html" || path == tmplFolder+"/navitem.html" || strings.Index(path, tmplFolder+"/css") == 0 || strings.Index(path, tmplFolder+"/js") == 0 || strings.Index(path, tmplFolder+"/itemicons") == 0 {
+			if err != nil {
+				return err
+			}
+			if info.IsDir() {
+				return nil
+			}
+			b, err := ioutil.ReadFile(path)
+			if err != nil {
+				return err
+			}
+			mfile[strings.Replace(path, "templates/"+tpl.Path+"/", "", 1)] = string(b)
+			return nil
+		}
+	}
+	err = filepath.Walk(templateFolder+"/"+tpl.Path+"/", walker)
+	if err != nil {
+		return models.RequestResult{Error: err.Error()}
+	}
+
+	b, _ := json.Marshal(mfile)
+	if err != nil {
+		return models.RequestResult{Error: err.Error()}
+	}
+
+	//b2, err := ioutil.ReadFile(templateFolder + "/" + tpl.Path + ".zip")
+	//b := base64.StdEncoding.EncodeToString(b2)
 
 	return models.RequestResult{Status: 1, Data: string(b)}
 }
