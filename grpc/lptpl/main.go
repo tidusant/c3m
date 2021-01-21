@@ -1,6 +1,7 @@
 package main
 
 import (
+	"archive/zip"
 	"bytes"
 	"compress/gzip"
 	"encoding/base64"
@@ -8,6 +9,7 @@ import (
 	maingrpc "github.com/tidusant/c3m/grpc"
 	pb "github.com/tidusant/c3m/grpc/protoc"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"io"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
@@ -236,6 +238,77 @@ func (m *myRPC) Approve() models.RequestResult {
 	if err != nil {
 		return models.RequestResult{Error: err.Error()}
 	}
+
+	if oldtpl.Status != 2 {
+		return models.RequestResult{Error: "something wrong"}
+	}
+
+	//zip file
+	tmplFolder := templateFolder + `/` + oldtpl.Path
+	zipfile, err := os.Create(templateFolder + `/` + oldtpl.Path + `.zip`)
+	if err != nil {
+		return models.RequestResult{Error: err.Error()}
+	}
+	defer zipfile.Close()
+
+	archive := zip.NewWriter(zipfile)
+	defer archive.Close()
+
+	info, err := os.Stat(tmplFolder)
+	if err != nil {
+		return models.RequestResult{Error: err.Error()}
+	}
+
+	var baseDir string
+	if info.IsDir() {
+		baseDir = filepath.Base(tmplFolder)
+	}
+
+	filepath.Walk(tmplFolder, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		//skip folder images
+
+		if strings.Index(path, tmplFolder+"/images") == 0 || path == tmplFolder+"/images" {
+			return nil
+		}
+		header, err := zip.FileInfoHeader(info)
+		if err != nil {
+			return err
+		}
+
+		if baseDir != "" {
+			header.Name = filepath.Join(baseDir, strings.TrimPrefix(path, tmplFolder))
+		}
+
+		if info.IsDir() {
+			header.Name += "/"
+		} else {
+			header.Method = zip.Deflate
+		}
+
+		writer, err := archive.CreateHeader(header)
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		file, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+		_, err = io.Copy(writer, file)
+		return err
+	})
+	if err != nil {
+		return models.RequestResult{Error: err.Error()}
+	}
+
 	//update database
 	oldtpl.Status = 1
 	err = m.Rpch.UpdateLpTemplate(oldtpl)
@@ -247,7 +320,7 @@ func (m *myRPC) Approve() models.RequestResult {
 }
 
 func (m *myRPC) LoadTemplate() models.RequestResult {
-	if ok, _ := m.Usex.Modules["c3m-lptpl-user"]; !ok {
+	if ok, _ := m.Usex.Modules["c3m-lptpl-builder"]; !ok {
 		return models.RequestResult{Error: "permission denied"}
 	}
 	tplID, err := primitive.ObjectIDFromHex(m.Usex.Params)
@@ -262,36 +335,50 @@ func (m *myRPC) LoadTemplate() models.RequestResult {
 	if tpl.Status != 1 {
 		return models.RequestResult{Error: "something wrong"}
 	}
-	mfile := make(map[string][]byte)
+	//mfile := make(map[string][]byte)
+	//
+	//walker := func(path string, info os.FileInfo, err error) error {
+	//	//skip folder images
+	//
+	//	if strings.Index(strings.Replace(path, "templates/"+tpl.Path+"/", "", 1), `images/`) == 0 {
+	//		return nil
+	//	}
+	//	if err != nil {
+	//		return err
+	//	}
+	//	if info.IsDir() {
+	//		return nil
+	//	}
+	//	b, err := ioutil.ReadFile(path)
+	//	if err != nil {
+	//		return err
+	//	}
+	//	mfile[strings.Replace(path, "templates/"+tpl.Path+"/", "", 1)] = b
+	//	return nil
+	//}
+	//err = filepath.Walk(templateFolder+"/"+tpl.Path+"/", walker)
+	//if err != nil {
+	//	return models.RequestResult{Error: err.Error()}
+	//}
 
-	walker := func(path string, info os.FileInfo, err error) error {
-		//skip folder images
+	//b, _ := json.Marshal(mfile)
+	//if err != nil {
+	//	return models.RequestResult{Error: err.Error()}
+	//}
 
-		if strings.Index(strings.Replace(path, "templates/"+tpl.Path+"/", "", 1), `images/`) == 0 {
-			return nil
-		}
-		if err != nil {
-			return err
-		}
-		if info.IsDir() {
-			return nil
-		}
-		b, err := ioutil.ReadFile(path)
-		if err != nil {
-			return err
-		}
-		mfile[strings.Replace(path, "templates/"+tpl.Path+"/", "", 1)] = b
-		return nil
-	}
-	err = filepath.Walk(templateFolder+"/"+tpl.Path+"/", walker)
-	if err != nil {
-		return models.RequestResult{Error: err.Error()}
-	}
+	// marshal and gzip
+	//bfile, err := json.Marshal(mfile)
+	//if err != nil {
+	//	return models.RequestResult{Error: err.Error()}
+	//}
+	//var bb bytes.Buffer
+	//w := gzip.NewWriter(&bb)
+	//w.Write(bfile)
+	//w.Close()
+	//b := base64.StdEncoding.EncodeToString(bb.Bytes())
 
-	b, _ := json.Marshal(mfile)
-	if err != nil {
-		return models.RequestResult{Error: err.Error()}
-	}
+	b2, err := ioutil.ReadFile(templateFolder + "/" + tpl.Path + ".zip")
+	b := base64.StdEncoding.EncodeToString(b2)
 
 	return models.RequestResult{Status: 1, Data: string(b)}
 }
