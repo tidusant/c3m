@@ -65,19 +65,22 @@ func (m *myRPC) Save() models.RequestResult {
 		return models.RequestResult{Error: "permission denied"}
 	}
 	args := strings.Split(m.Usex.Params, ",")
-	log.Debugf("params: %+v", args)
+
 	if len(args) < 5 {
 		return models.RequestResult{Error: "not enough params"}
 	}
 	campID := args[1]
 	content := args[0]
-	log.Debug(args[2])
-	tplID, err := primitive.ObjectIDFromHex(args[2])
+
+	tplID, err := primitive.ObjectIDFromHex(args[3])
 	if err != nil {
 		return models.RequestResult{Error: "template id is invalid"}
 	}
-	orguserID := args[3]
-	orgID := args[4]
+	orguserID := args[4]
+	orgID := args[2]
+	if orguserID == "" || orgID == "" || campID == "" || content == "" {
+		return models.RequestResult{Error: "params is invalid"}
+	}
 	lp := m.Rpch.GetLPByCampID(campID, orgID)
 	if lp.ID.IsZero() {
 		lp.Created = time.Now()
