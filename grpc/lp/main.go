@@ -65,6 +65,7 @@ func (m *myRPC) Save() models.RequestResult {
 		return models.RequestResult{Error: "permission denied"}
 	}
 	args := strings.Split(m.Usex.Params, ",")
+	log.Debugf("params: %+v", args)
 	if len(args) < 5 {
 		return models.RequestResult{Error: "not enough params"}
 	}
