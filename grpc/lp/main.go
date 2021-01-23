@@ -71,9 +71,10 @@ func (m *myRPC) Save() models.RequestResult {
 	}
 	campID := args[1]
 	content := args[0]
+	log.Debug(args[2])
 	tplID, err := primitive.ObjectIDFromHex(args[2])
 	if err != nil {
-		return models.RequestResult{Error: err.Error()}
+		return models.RequestResult{Error: "template id is invalid"}
 	}
 	orguserID := args[3]
 	orgID := args[4]
