@@ -46,6 +46,8 @@ spec:
               value: "c3m-grpc-page-service:8904"
             - name: LPTPL_IP
               value: "c3m-grpc-lptpl-service:8905"
+            - name: LP_IP
+              value: "c3m-grpc-lp-service:8906"
             - name: SESSION_IP
               value: "c3m-grpc-session-service:8864"
               #value: "c3m-grpc-ord-service.colis-dev.svc.cluster.local"
