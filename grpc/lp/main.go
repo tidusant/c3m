@@ -87,6 +87,7 @@ func (m *myRPC) Save() models.RequestResult {
 		lp.Modified = time.Now()
 		lp.LPTemplateID = tplID
 		lp.OrgID = orgID
+		lp.CampaignID = campID
 		lp.SFUserID = orguserID
 		lp.Content = content
 	}
