@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	maingrpc "github.com/tidusant/c3m/grpc"
 	pb "github.com/tidusant/c3m/grpc/protoc"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -41,6 +42,8 @@ func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (*pb.RPCResponse,
 	if rs.Error == "" {
 		if m.Usex.Action == "s" {
 			rs = m.Save()
+		} else if m.Usex.Action == "la" {
+			rs = m.LoadAll()
 			//} else if m.Usex.Action == "l" {
 			//	rs = m.Load()
 			//} else if m.Usex.Action == "p" {
@@ -95,6 +98,19 @@ func (m *myRPC) Save() models.RequestResult {
 		return models.RequestResult{Error: "cannot save template"}
 	}
 	return models.RequestResult{Status: 1, Data: ""}
+}
+
+//load all landingpage for user
+func (m *myRPC) LoadAll() models.RequestResult {
+	if ok, _ := m.Usex.Modules["c3m-lptpl-builder"]; !ok {
+		return models.RequestResult{Error: "permission denied"}
+	}
+	lps := m.Rpch.GetAllLP(m.Usex.UserID)
+	b, err := json.Marshal(lps)
+	if err != nil {
+		return models.RequestResult{Error: err.Error()}
+	}
+	return models.RequestResult{Status: 1, Data: string(b), Compress: true}
 }
 
 func main() {

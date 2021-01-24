@@ -4,6 +4,8 @@ import (
 	"github.com/tidusant/c3m/common/c3mcommon"
 	"github.com/tidusant/c3m/repo/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"time"
 )
 
@@ -13,6 +15,20 @@ func (r *Repo) GetLPByCampID(campID, orgID string) models.LandingPage {
 	var rs models.LandingPage
 	col.FindOne(ctx, bson.M{"campid": campID, "orgid": orgID}).Decode(&rs)
 	r.QueryCount++
+	r.QueryTime += time.Since(start)
+	return rs
+}
+func (r *Repo) GetAllLP(userID primitive.ObjectID) []models.LandingPage {
+	start := time.Now()
+	col := db.Collection("landingpages")
+	var rs []models.LandingPage
+	opts := options.Find().SetProjection(bson.M{"_id": 0, "content": 0})
+
+	cursor, err := col.Find(ctx, bson.M{"userid": userID}, opts)
+	r.QueryCount++
+	if err = cursor.All(ctx, &rs); err != nil {
+		c3mcommon.CheckError("GetAllLP ", err)
+	}
 	r.QueryTime += time.Since(start)
 	return rs
 }

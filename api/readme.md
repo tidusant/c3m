@@ -8,7 +8,7 @@
 ```#bin/bash
 cd colis/portals/admin
 
-env AUTH_IP=127.0.0.1:8901 SHOP_IP=127.0.0.1:8902 SESSION_URI="mongo_server_uri" SESSION_DB="mongodb_name" CHADMIN_URI="mongo_server_url" CHADMIN_DB="mongodb_name"  go run main.go 
+env SESSION_IP=127.0.0.1:8864 AUTH_IP=127.0.0.1:8901 SHOP_IP=127.0.0.1:8902 ORD_IP=127.0.0.1:8903 PAGE_IP=127.0.0.1:8904 LPTPL_IP=127.0.0.1:8905 LP_IP=127.0.0.1:8906 go run main.go session.go 
 ```
 ### build & run in docker:
 ```#bin/bash
@@ -43,10 +43,8 @@ rs.initiate(
  )
 ```
  Done. Now you can create user or restore your mongo data 
- 
- 
 
- 
+
 
 ### reference:
 https://kubernetes.io/docs/tasks/administer-cluster/dns-debugging-resolution/

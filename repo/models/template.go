@@ -24,7 +24,6 @@ type LandingPage struct {
 	ID           primitive.ObjectID `bson:"_id,omitempty"`
 	Path         string             `bson:"path"`
 	LPTemplateID primitive.ObjectID `bson:"lptemplateid"`
-	TemplateName string             `bson:"templatename"`
 	CustomDomain bool               `bson:"customdomain"`
 	DomainName   string             `bson:"domainname"`
 	FTPUser      string             `bson:"ftpuser"`
