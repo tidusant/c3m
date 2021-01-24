@@ -371,7 +371,7 @@ func (m *myRPC) LoadTemplate() models.RequestResult {
 	//b2, err := ioutil.ReadFile(templateFolder + "/" + tpl.Path + ".zip")
 	//b := base64.StdEncoding.EncodeToString(b2)
 
-	return models.RequestResult{Status: 1, Data: string(b)}
+	return models.RequestResult{Status: 1, Data: string(b), Compress: true}
 }
 
 func main() {
