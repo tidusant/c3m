@@ -120,7 +120,7 @@ func (m *myRPC) LoadForBuilder() models.RequestResult {
 	return models.RequestResult{Status: 1, Data: string(b)}
 }
 
-//load all template for user
+//load all templates for user
 func (m *myRPC) LoadForUser() models.RequestResult {
 	if ok, _ := m.Usex.Modules["c3m-lptpl-user"]; !ok {
 		return models.RequestResult{Error: "permission denied"}
@@ -133,7 +133,7 @@ func (m *myRPC) LoadForUser() models.RequestResult {
 		return models.RequestResult{Error: err.Error()}
 	}
 	b, _ := json.Marshal(templates)
-	return models.RequestResult{Status: 1, Data: string(b)}
+	return models.RequestResult{Status: 1, Data: string(b), Compress: true}
 }
 func (m *myRPC) Submit(resubmit bool) models.RequestResult {
 	if ok, _ := m.Usex.Modules["c3m-lptpl-builder"]; !ok {
