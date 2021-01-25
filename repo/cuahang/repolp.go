@@ -46,11 +46,12 @@ func (r *Repo) SaveLP(lp models.LandingPage) bool {
 		}
 	} else {
 		//update
-		filter := bson.M{"campid": lp.CampaignID, "orgid": lp.OrgID}
+		filter := bson.M{"campaignid": lp.CampaignID, "orgid": lp.OrgID}
 		update := bson.M{"$set": bson.M{
-			"content":  lp.Content,
-			"sfuserid": lp.SFUserID,
-			"modified": lp.Modified,
+			"content":      lp.Content,
+			"sfuserid":     lp.SFUserID,
+			"modified":     lp.Modified,
+			"lptemplateid": lp.LPTemplateID,
 		}}
 
 		_, err := col.UpdateOne(ctx, filter, update)

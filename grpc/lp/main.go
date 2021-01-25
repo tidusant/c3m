@@ -87,7 +87,6 @@ func (m *myRPC) Save() models.RequestResult {
 	if lp.ID.IsZero() {
 		lp.UserID = m.Usex.UserID
 		lp.Created = time.Now()
-
 		lp.OrgID = orgID
 		lp.CampaignID = campID
 	}
