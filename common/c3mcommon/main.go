@@ -906,7 +906,7 @@ func RequestAPI(address, query, data string) string {
 	if resp == nil || resp.StatusCode != 200 {
 		rs.Error = "Request service error. Please check the service at " + address
 	} else {
-		rtstr = mycrypto.DecodeOld(rtstr, 2)
+		rtstr = mycrypto.DecodeOld(rtstr, 8)
 		err := json.Unmarshal([]byte(rtstr), &rs)
 		if err != nil {
 			rs.Error = "Response string parse json fail: " + err.Error()

@@ -305,13 +305,14 @@ func DecodeOld(code string, div int) string {
 		//base64str = Base64fix(base64str)
 		//byteDecode, _ := DecompressFromBase64(base64str)
 		//data, _ := base64.StdEncoding.DecodeString(base64str)
-		if div == 2 {
-			byteDecode, _ := DecompressFromBase64(base64str)
-			rt = byteDecode
-		} else {
-			byteDecode, _ := base64.StdEncoding.DecodeString(Base64fix(base64str))
-			rt = string(byteDecode)
-		}
+
+		//if div == 2 {
+		byteDecode, _ := DecompressFromBase64(base64str)
+		rt = byteDecode
+		//} else {
+		//	byteDecode, _ := base64.StdEncoding.DecodeString(Base64fix(base64str))
+		//	rt = string(byteDecode)
+		//}
 
 		//log.Debugf("rt :%s", rt)
 		//log.Debugf("data decompress %s", rt)
