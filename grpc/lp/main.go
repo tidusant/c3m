@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	maingrpc "github.com/tidusant/c3m/grpc"
 	pb "github.com/tidusant/c3m/grpc/protoc"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -43,7 +42,7 @@ func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (*pb.RPCResponse,
 		if m.Usex.Action == "s" {
 			rs = m.Save()
 		} else if m.Usex.Action == "la" {
-			rs = m.LoadAll()
+			rs = m.SFLoadAll()
 			//} else if m.Usex.Action == "l" {
 			//	rs = m.Load()
 			//} else if m.Usex.Action == "p" {
@@ -102,16 +101,28 @@ func (m *myRPC) Save() models.RequestResult {
 }
 
 //load all landingpage for user
-func (m *myRPC) LoadAll() models.RequestResult {
+func (m *myRPC) SFLoadAll() models.RequestResult {
 	if ok, _ := m.Usex.Modules["c3m-lptpl-user"]; !ok {
 		return models.RequestResult{Error: "permission denied"}
 	}
 	lps := m.Rpch.GetAllLP(m.Usex.UserID)
-	b, err := json.Marshal(lps)
-	if err != nil {
-		return models.RequestResult{Error: err.Error()}
+	rt := `{{}`
+	if len(lps) > 0 {
+		for _, v := range lps {
+			rt += fmt.Sprintf(`,"%s":{"CustomDomain":%b,
+"DomainName":"%s",
+"FTPUser":"%s",
+"FTPPass":"%s",
+"LPTemplateID":"%s",
+"Created":"%s",
+"LastBuild":"%s",
+"Modified":"%s",
+"Submitted":%d,
+"Viewed":%d}`, v.CampaignID, v.DomainName, v.FTPUser, v.FTPPass, v.LPTemplateID, v.Created, v.LastBuild, v.Modified, v.Submitted, v.Viewed)
+		}
 	}
-	return models.RequestResult{Status: 1, Data: string(b), Compress: true}
+	rt += `}`
+	return models.RequestResult{Status: 1, Data: rt}
 }
 
 func main() {
