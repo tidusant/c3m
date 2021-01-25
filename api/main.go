@@ -115,11 +115,10 @@ func postHandler(c *gin.Context) {
 	//check request url, only one unique url per second
 
 	//if rpsex.CheckRequest(c.Request.URL.Path, c.Request.UserAgent(), c.Request.Referer(), c.Request.RemoteAddr, "POST") {
-	Compress := false
+
 	if CheckRequest(c.Request.URL.Path, c.Request.RemoteAddr) {
 
 		rs := myRoute(c)
-		Compress = rs.Compress
 		start2 := time.Now()
 
 		b, _ := json.Marshal(rs)
