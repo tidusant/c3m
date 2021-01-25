@@ -115,12 +115,10 @@ func Encode(data string, div int) string {
 	x2 = strings.Replace(x2, "=", "", -1)
 	//log.Debugf("x2 base 64 :%s", x2)
 	//x2b := []byte(x2)
-	if div == 2 {
-		data = CompressToBase64(data)
-	} else {
-		data = base64.StdEncoding.EncodeToString([]byte(data))
-		//log.Debugf("data base 64 :%s", data)
-	}
+
+	//data = base64.StdEncoding.EncodeToString([]byte(data))
+	data = CompressToBase64(data)
+	//log.Debugf("data base 64 :%s", data)
 
 	data = strings.Replace(data, "=", "", -1)
 

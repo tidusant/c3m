@@ -136,11 +136,8 @@ func postHandler(c *gin.Context) {
 	} else {
 		start := time.Now()
 		log.Debugf("DATA len before:%d", len(strrt))
-		if Compress {
-			strrt = mycrypto.Encode(strrt, 2)
-		} else {
-			strrt = mycrypto.Encode(strrt, 8)
-		}
+
+		strrt = mycrypto.Encode(strrt, 8)
 
 		log.Debugf("DATA len after:%d", len(strrt))
 		log.Debugf("encode time:%s", time.Since(start))
