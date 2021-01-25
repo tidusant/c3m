@@ -34,7 +34,7 @@ func (r *Repo) GetAllLP(userID primitive.ObjectID) []models.LandingPage {
 }
 func (r *Repo) SaveLP(lp models.LandingPage) bool {
 	start := time.Now()
-	col := db.Collection("landingpage")
+	col := db.Collection("landingpages")
 	rs := true
 	if lp.ID.IsZero() {
 		//insert
