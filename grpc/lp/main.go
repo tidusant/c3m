@@ -102,7 +102,7 @@ func (m *myRPC) Save() models.RequestResult {
 
 //load all landingpage for user
 func (m *myRPC) LoadAll() models.RequestResult {
-	if ok, _ := m.Usex.Modules["c3m-lptpl-builder"]; !ok {
+	if ok, _ := m.Usex.Modules["c3m-lptpl-user"]; !ok {
 		return models.RequestResult{Error: "permission denied"}
 	}
 	lps := m.Rpch.GetAllLP(m.Usex.UserID)
