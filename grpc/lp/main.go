@@ -86,6 +86,7 @@ func (m *myRPC) Save() models.RequestResult {
 	}
 	lp := m.Rpch.GetLPByCampID(campID, orgID)
 	if lp.ID.IsZero() {
+		lp.UserID = m.Usex.UserID
 		lp.Created = time.Now()
 		lp.Modified = time.Now()
 		lp.LPTemplateID = tplID
