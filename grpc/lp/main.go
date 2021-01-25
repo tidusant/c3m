@@ -83,7 +83,7 @@ func (m *myRPC) Save() models.RequestResult {
 	if orguserID == "" || orgID == "" || campID == "" || content == "" {
 		return models.RequestResult{Error: "params is invalid"}
 	}
-	lp := m.Rpch.GetLPByCampID(campID, orgID)
+	lp := m.Rpch.GetLPByCampID(campID, orgID, m.Usex.UserID)
 	if lp.ID.IsZero() {
 		lp.UserID = m.Usex.UserID
 		lp.Created = time.Now()
@@ -139,7 +139,7 @@ func (m *myRPC) LoadLPContent() models.RequestResult {
 	if orgID == "" || campID == "" {
 		return models.RequestResult{Error: "params is invalid"}
 	}
-	lp := m.Rpch.GetLPByCampID(campID, orgID)
+	lp := m.Rpch.GetLPByCampID(campID, orgID, m.Usex.UserID)
 	if lp.ID.IsZero() {
 		return models.RequestResult{Error: "cannot found landing page"}
 	}
