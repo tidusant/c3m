@@ -118,7 +118,7 @@ func (m *myRPC) SFLoadAll() models.RequestResult {
 "LastBuild":"%s",
 "Modified":"%s",
 "Submitted":"%d",
-"Viewed":%d}`, v.CampaignID, v.CustomDomain, v.DomainName, v.FTPUser, v.FTPPass, v.LPTemplateID, v.Created, v.LastBuild, v.Modified, v.Submitted, v.Viewed)
+"Viewed":%d}`, v.CampaignID, v.CustomDomain, v.DomainName, v.FTPUser, v.FTPPass, v.LPTemplateID.Hex(), v.Created, v.LastBuild, v.Modified, v.Submitted, v.Viewed)
 		}
 	}
 	rt += `}`
