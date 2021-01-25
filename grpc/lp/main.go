@@ -84,7 +84,7 @@ func (m *myRPC) Save() models.RequestResult {
 	if orguserID == "" || orgID == "" || campID == "" || content == "" {
 		return models.RequestResult{Error: "params is invalid"}
 	}
-	log.Debug(mycrypto.Base64Decompress(content))
+	log.Debug(mycrypto.Base64Decompress(mycrypto.Base64Decode(content)))
 	lp := m.Rpch.GetLPByCampID(campID, orgID, m.Usex.UserID)
 	if lp.ID.IsZero() {
 		lp.UserID = m.Usex.UserID
