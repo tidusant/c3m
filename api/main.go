@@ -176,6 +176,7 @@ func callgRPC(name string, rpcRequest pb.RPCRequest) models.RequestResult {
 		rs.Error = "Parse data string from service Error."
 	}
 	duration, _ := time.ParseDuration(r.GetTime())
+
 	log.Debugf("callgRPC %s query time:%s", name, duration)
 	log.Debugf("callgRPC %s query count:%d", name, r.GetQuery())
 	log.Debugf("total callgRPC time:%s", time.Since(start))
@@ -218,7 +219,7 @@ func myRoute(c *gin.Context) models.RequestResult {
 
 	//get rpc call name from first arg
 	log.Debugf("session: %+v", session)
-	log.Debugf("RPCname:%s, action:%s, app:%s", RPCname, requestAction, AppName)
+	log.Debugf("RPCname:%s, action:%s, app:%s, params:%s", RPCname, requestAction, AppName, requestParams)
 	if RPCname == "CreateSex" {
 		//create session string and save it into db
 		//data = rpsex.CreateSession()
