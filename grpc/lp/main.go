@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"github.com/tidusant/c3m/common/mycrypto"
 	maingrpc "github.com/tidusant/c3m/grpc"
 	pb "github.com/tidusant/c3m/grpc/protoc"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -84,18 +83,18 @@ func (m *myRPC) Save() models.RequestResult {
 	if orguserID == "" || orgID == "" || campID == "" || content == "" {
 		return models.RequestResult{Error: "params is invalid"}
 	}
-	log.Debug(mycrypto.Base64Decompress(mycrypto.Base64Decode(content)))
 	lp := m.Rpch.GetLPByCampID(campID, orgID, m.Usex.UserID)
 	if lp.ID.IsZero() {
 		lp.UserID = m.Usex.UserID
 		lp.Created = time.Now()
-		lp.Modified = time.Now()
-		lp.LPTemplateID = tplID
+
 		lp.OrgID = orgID
 		lp.CampaignID = campID
-		lp.SFUserID = orguserID
-		lp.Content = content
 	}
+	lp.Modified = time.Now()
+	lp.LPTemplateID = tplID
+	lp.SFUserID = orguserID
+	lp.Content = content
 	if !m.Rpch.SaveLP(lp) {
 		return models.RequestResult{Error: "cannot save template"}
 	}
