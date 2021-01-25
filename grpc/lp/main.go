@@ -43,8 +43,8 @@ func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (*pb.RPCResponse,
 			rs = m.Save()
 		} else if m.Usex.Action == "la" {
 			rs = m.SFLoadAll()
-			//} else if m.Usex.Action == "l" {
-			//	rs = m.Load()
+		} else if m.Usex.Action == "llc" {
+			rs = m.LoadLPContent()
 			//} else if m.Usex.Action == "p" {
 			//	rs = m.Publish()
 			//} else if m.Usex.Action == "sc" {
@@ -123,6 +123,28 @@ func (m *myRPC) SFLoadAll() models.RequestResult {
 	}
 	rt += `}`
 	return models.RequestResult{Status: 1, Data: rt}
+}
+
+func (m *myRPC) LoadLPContent() models.RequestResult {
+	if ok, _ := m.Usex.Modules["c3m-lptpl-user"]; !ok {
+		return models.RequestResult{Error: "permission denied"}
+	}
+	args := strings.Split(m.Usex.Params, ",")
+
+	if len(args) < 2 {
+		return models.RequestResult{Error: "not enough params"}
+	}
+	campID := args[0]
+	orgID := args[1]
+	if orgID == "" || campID == "" {
+		return models.RequestResult{Error: "params is invalid"}
+	}
+	lp := m.Rpch.GetLPByCampID(campID, orgID)
+	if lp.ID.IsZero() {
+		return models.RequestResult{Error: "cannot found landing page"}
+	}
+
+	return models.RequestResult{Status: 1, Data: lp.Content}
 }
 
 func main() {
