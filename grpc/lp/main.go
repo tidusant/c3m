@@ -167,6 +167,22 @@ func (m *myRPC) SaveConfig() models.RequestResult {
 	if oldlp.ID.IsZero() {
 		return models.RequestResult{Error: "cannot found landing page"}
 	}
+	//check domain name
+	if lp.CustomHost {
+		if strings.Trim(lp.DomainName, " ") == "" {
+			return models.RequestResult{Error: "Domain Name is empty"}
+		}
+		f := func(r rune) bool {
+			return r < '0' || r > 'z'
+		}
+		if strings.IndexFunc(lp.DomainName, f) != -1 {
+			return models.RequestResult{Error: "Found special char in Domain Name"}
+		}
+		if len(strings.Trim(lp.DomainName, " ")) < 4 {
+			return models.RequestResult{Error: "Domain Name length must greater than 3"}
+		}
+	}
+
 	oldlp.CustomHost = lp.CustomHost
 	oldlp.DomainName = lp.DomainName
 	oldlp.FTPPass = lp.FTPPass

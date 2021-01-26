@@ -1,13 +1,10 @@
 package mycrypto
 
 import (
-	"bytes"
-	"compress/lzw"
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
 	"github.com/tidusant/c3m/common/log"
-	"io"
 	"math"
 	"math/rand"
 	"strconv"
@@ -41,43 +38,6 @@ func Base64fix(s string) string {
 		}
 	}
 	return s
-}
-
-// Base64Compress using LWZ
-func Base64Compress(in string) string {
-	buf := bytes.NewBuffer(nil)
-	w := lzw.NewWriter(buf, lzw.LSB, 8)
-	// Write the content to be compressed
-	w.Write([]byte(in))
-	w.Close()
-	return base64.StdEncoding.EncodeToString(buf.Bytes())
-
-}
-
-// DecompressFromBase64 using LWZ
-
-func Base64Decompress(in string) (string, error) {
-
-	if strings.Trim(in, " ") == "" {
-		return "", nil
-	}
-
-	buf2 := bytes.NewBuffer(nil)
-	b, err := base64.StdEncoding.DecodeString(in)
-	if err != nil {
-		return "", err
-	}
-	_, err = buf2.Write(b)
-	if err != nil {
-		return "", err
-	}
-	// Unzip
-	r := lzw.NewReader(buf2, lzw.LSB, 8)
-	defer r.Close()
-
-	io.Copy(buf2, r)
-	return string(buf2.Bytes()), nil
-
 }
 
 func MD5(text string) string {
