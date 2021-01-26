@@ -109,7 +109,7 @@ func (m *myRPC) SFLoadAll() models.RequestResult {
 	rt := `{"":{}`
 	if len(lps) > 0 {
 		for _, v := range lps {
-			rt += fmt.Sprintf(`,"%s":{"CustomDomain":%t,
+			rt += fmt.Sprintf(`,"%s":{"CustomHost":%t,
 "DomainName":"%s",
 "FTPUser":"%s",
 "FTPPass":"%s",
