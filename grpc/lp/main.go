@@ -36,6 +36,10 @@ type myRPC struct {
 	maingrpc.MainRPC
 }
 
+var (
+	LPminserver string
+)
+
 func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (*pb.RPCResponse, error) {
 	m := myRPC{}
 	//generate user information into usex by calling parent func (m *myRPC) InitUsex that return error string
@@ -229,15 +233,35 @@ func (m *myRPC) Publish() models.RequestResult {
 	if ok, _ := m.Usex.Modules["c3m-lptpl-user"]; !ok {
 		return models.RequestResult{Error: "permission denied"}
 	}
-	lp := m.Rpch.GetLPByCampID(m.Usex.Params, m.Usex.UserID)
 
+	lp := m.Rpch.GetLPByCampID(m.Usex.Params, m.Usex.UserID)
 	if lp.ID.IsZero() {
 		return models.RequestResult{Error: "Landing page not found"}
 	}
+	//load template
+	lptpl, _ := m.Rpch.GetLpTemplateById(lp.LPTemplateID)
+	if lptpl.ID.IsZero() {
+		return models.RequestResult{Error: "Landing page template not found"}
+	}
 	//call service publish
+	bodystr := c3mcommon.RequestAPI2(LPminserver+"/publish", lptpl.Path, m.Usex.Session+"|"+lp.Content)
+
+	var rs models.RequestResult
+	err := json.Unmarshal([]byte(bodystr), &rs)
+
+	if err != nil {
+		return models.RequestResult{Error: err.Error()}
+	}
+	if rs.Status != 1 {
+		return models.RequestResult{Error: rs.Error}
+	}
 
 	//update lp last publish
 	lp.LastBuild = time.Now()
+	lp.Path = lp.DomainName
+	if !lp.CustomHost {
+		lp.Path += ".c3m.site"
+	}
 	if !m.Rpch.SaveLP(lp) {
 		return models.RequestResult{Error: "Can not update Last Build time after publish"}
 	}
@@ -256,9 +280,11 @@ func main() {
 	if err != nil {
 		log.Errorf("failed to listen: %v", err)
 	}
+	LPminserver = os.Getenv("LPMIN_ADD")
 	s := grpc.NewServer()
 	fmt.Printf("listening on %s\n", port)
 	pb.RegisterGRPCServicesServer(s, &service{})
+
 	if err := s.Serve(lis); err != nil {
 		log.Errorf("failed to serve : %v", err)
 	}

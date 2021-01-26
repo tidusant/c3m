@@ -930,7 +930,7 @@ func RequestAPI(address, query, data string) string {
 	return string(b)
 }
 
-//same as requestAPI but encode data with Encode and decode data with func Decode (decode of encDat2)
+//same as requestAPI but encode data with Encode and decode data with  Decode (decode of encDat2)
 func RequestAPI2(address, query, data string) string {
 	data = "data=" + mycrypto.Encode(data, 3)
 
