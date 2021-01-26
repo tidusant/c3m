@@ -244,7 +244,7 @@ func (m *myRPC) Publish() models.RequestResult {
 		return models.RequestResult{Error: "Landing page template not found"}
 	}
 	//call service publish
-	bodystr := c3mcommon.RequestAPI2(LPminserver+"/publish", lptpl.Path, m.Usex.Session+"|"+lp.Content)
+	bodystr := c3mcommon.RequestAPI2(LPminserver+"/publish", lptpl.Path, m.Usex.Session+","+lp.Content)
 
 	var rs models.RequestResult
 	err := json.Unmarshal([]byte(bodystr), &rs)
