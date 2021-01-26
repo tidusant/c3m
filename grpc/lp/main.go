@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"github.com/tidusant/c3m/common/mycrypto"
 	maingrpc "github.com/tidusant/c3m/grpc"
 	pb "github.com/tidusant/c3m/grpc/protoc"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -47,8 +49,8 @@ func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (*pb.RPCResponse,
 			rs = m.LoadLPContent()
 			//} else if m.Usex.Action == "p" {
 			//	rs = m.Publish()
-			//} else if m.Usex.Action == "sc" {
-			//	rs = m.SaveConfig()
+		} else if m.Usex.Action == "sc" {
+			rs = m.SaveConfig()
 			//} else if m.Usex.Action == "lc" {
 			//	rs = m.LoadConfig()
 			//} else if m.Usex.Action == "d" {
@@ -95,7 +97,7 @@ func (m *myRPC) Save() models.RequestResult {
 	lp.SFUserID = orguserID
 	lp.Content = content
 	if !m.Rpch.SaveLP(lp) {
-		return models.RequestResult{Error: "cannot save template"}
+		return models.RequestResult{Error: "cannot save landing page"}
 	}
 	return models.RequestResult{Status: 1, Data: ""}
 }
@@ -145,6 +147,34 @@ func (m *myRPC) LoadLPContent() models.RequestResult {
 	}
 
 	return models.RequestResult{Status: 1, Data: lp.Content}
+}
+
+func (m *myRPC) SaveConfig() models.RequestResult {
+	if ok, _ := m.Usex.Modules["c3m-lptpl-user"]; !ok {
+		return models.RequestResult{Error: "permission denied"}
+	}
+
+	data, err := mycrypto.DecompressFromBase64(m.Usex.Params)
+	if err != nil {
+		return models.RequestResult{Error: err.Error()}
+	}
+	var lp models.LandingPage
+	err = json.Unmarshal([]byte(data), &lp)
+	if err != nil {
+		return models.RequestResult{Error: "cannot parse json data to landing page"}
+	}
+	oldlp := m.Rpch.GetLPByCampID(lp.CampaignID, lp.OrgID, m.Usex.UserID)
+	if oldlp.ID.IsZero() {
+		return models.RequestResult{Error: "cannot found landing page"}
+	}
+	oldlp.CustomHost = lp.CustomHost
+	oldlp.DomainName = lp.DomainName
+	oldlp.FTPPass = lp.FTPPass
+	oldlp.FTPUser = lp.FTPUser
+	if !m.Rpch.SaveLP(oldlp) {
+		return models.RequestResult{Error: "cannot save config"}
+	}
+	return models.RequestResult{Status: 1, Data: ""}
 }
 
 func main() {
