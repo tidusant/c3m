@@ -181,6 +181,16 @@ func (m *myRPC) SaveConfig() models.RequestResult {
 		if len(strings.Trim(lp.DomainName, " ")) < 4 {
 			return models.RequestResult{Error: "Domain Name length must greater than 3"}
 		}
+	} else {
+		if strings.Trim(lp.DomainName, " ") == "" {
+			return models.RequestResult{Error: "Domain Name is empty"}
+		}
+		if strings.Trim(lp.FTPUser, " ") == "" {
+			return models.RequestResult{Error: "FTPUser is empty"}
+		}
+		if strings.Trim(lp.FTPPass, " ") == "" {
+			return models.RequestResult{Error: "FTPPass is empty"}
+		}
 	}
 
 	oldlp.CustomHost = lp.CustomHost
