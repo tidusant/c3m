@@ -65,3 +65,16 @@ func (r *Repo) SaveLP(lp models.LandingPage) bool {
 	r.QueryTime += time.Since(start)
 	return rs
 }
+func (r *Repo) DeleteLP(campids []string, userid primitive.ObjectID) bool {
+	start := time.Now()
+	col := db.Collection("landingpages")
+	rs := true
+	_, err := col.DeleteMany(ctx, bson.M{"userid": userid, "campaignid": bson.M{"$in": campids}})
+	r.QueryCount++
+	if err != nil {
+		c3mcommon.CheckError("DeleteLP ", err)
+		rs = false
+	}
+	r.QueryTime += time.Since(start)
+	return rs
+}

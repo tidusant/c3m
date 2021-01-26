@@ -53,8 +53,8 @@ func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (*pb.RPCResponse,
 			rs = m.SaveConfig()
 			//} else if m.Usex.Action == "lc" {
 			//	rs = m.LoadConfig()
-			//} else if m.Usex.Action == "d" {
-			//	rs = m.Delete()
+		} else if m.Usex.Action == "d" {
+			rs = m.Delete()
 		} else {
 			//unknow action
 			return m.ReturnNilRespone(), nil
@@ -199,6 +199,18 @@ func (m *myRPC) SaveConfig() models.RequestResult {
 	oldlp.FTPUser = lp.FTPUser
 	if !m.Rpch.SaveLP(oldlp) {
 		return models.RequestResult{Error: "cannot save config"}
+	}
+	return models.RequestResult{Status: 1, Data: ""}
+}
+
+func (m *myRPC) Delete() models.RequestResult {
+	if ok, _ := m.Usex.Modules["c3m-lptpl-user"]; !ok {
+		return models.RequestResult{Error: "permission denied"}
+	}
+	campids := strings.Split(m.Usex.Params, ",")
+
+	if !m.Rpch.DeleteLP(campids, m.Usex.UserID) {
+		return models.RequestResult{Error: "Could not delele landing page of campaign ID: " + m.Usex.Params}
 	}
 	return models.RequestResult{Status: 1, Data: ""}
 }
