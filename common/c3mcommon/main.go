@@ -573,6 +573,20 @@ func InArray(v interface{}, in interface{}) (ok bool, i int) {
 	}
 	return
 }
+func RemoveArrayElement(slice []interface{}, elem interface{}) []interface{} {
+	if len(slice) == 0 {
+		return slice
+	}
+	for i, v := range slice {
+		if v == elem {
+			slice = append(slice[:i], slice[i+1:]...)
+			return RemoveArrayElement(slice, elem)
+			break
+		}
+	}
+	return slice
+}
+
 func ImgResize(imagebytes []byte, w, h uint) ([]byte, string) {
 	filetype := http.DetectContentType(imagebytes[:512])
 	r := bytes.NewReader(imagebytes)

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"github.com/tidusant/c3m/common/c3mcommon"
 	"github.com/tidusant/c3m/common/mycrypto"
 	maingrpc "github.com/tidusant/c3m/grpc"
 	pb "github.com/tidusant/c3m/grpc/protoc"
@@ -47,12 +48,10 @@ func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (*pb.RPCResponse,
 			rs = m.SFLoadAll()
 		} else if m.Usex.Action == "llc" {
 			rs = m.LoadLPContent()
-			//} else if m.Usex.Action == "p" {
-			//	rs = m.Publish()
+		} else if m.Usex.Action == "p" {
+			rs = m.Publish()
 		} else if m.Usex.Action == "sc" {
 			rs = m.SaveConfig()
-			//} else if m.Usex.Action == "lc" {
-			//	rs = m.LoadConfig()
 		} else if m.Usex.Action == "d" {
 			rs = m.Delete()
 		} else {
@@ -85,7 +84,7 @@ func (m *myRPC) Save() models.RequestResult {
 	if orguserID == "" || orgID == "" || campID == "" || content == "" {
 		return models.RequestResult{Error: "params is invalid"}
 	}
-	lp := m.Rpch.GetLPByCampID(campID, orgID, m.Usex.UserID)
+	lp := m.Rpch.GetLPByCampID(campID, m.Usex.UserID)
 	if lp.ID.IsZero() {
 		lp.UserID = m.Usex.UserID
 		lp.Created = time.Now()
@@ -107,6 +106,8 @@ func (m *myRPC) SFLoadAll() models.RequestResult {
 	if ok, _ := m.Usex.Modules["c3m-lptpl-user"]; !ok {
 		return models.RequestResult{Error: "permission denied"}
 	}
+	campIdsWillRemove := strings.Split(m.Usex.Params, "-")
+	//get all LP
 	lps := m.Rpch.GetAllLP(m.Usex.UserID)
 	rt := `{"":{}`
 	if len(lps) > 0 {
@@ -121,9 +122,18 @@ func (m *myRPC) SFLoadAll() models.RequestResult {
 "Modified":"%s",
 "Submitted":%d,
 "Viewed":%d}`, v.CampaignID, v.CustomHost, v.DomainName, v.FTPUser, v.FTPPass, v.LPTemplateID.Hex(), v.Created, v.LastBuild, v.Modified, v.Submitted, v.Viewed)
+
+			//remove campid in campIdsWillRemove list
+			if ok, i := c3mcommon.InArray(v.CampaignID, campIdsWillRemove); ok {
+				campIdsWillRemove = append(campIdsWillRemove[:i], campIdsWillRemove[i+1:]...)
+			}
 		}
 	}
 	rt += `}`
+	//remove deleted landingpage's campaignid:
+	m.Usex.Params = strings.Join(campIdsWillRemove, ",")
+	m.Delete()
+
 	return models.RequestResult{Status: 1, Data: rt}
 }
 
@@ -141,7 +151,7 @@ func (m *myRPC) LoadLPContent() models.RequestResult {
 	if orgID == "" || campID == "" {
 		return models.RequestResult{Error: "params is invalid"}
 	}
-	lp := m.Rpch.GetLPByCampID(campID, orgID, m.Usex.UserID)
+	lp := m.Rpch.GetLPByCampID(campID, m.Usex.UserID)
 	if lp.ID.IsZero() {
 		return models.RequestResult{Error: "cannot found landing page"}
 	}
@@ -163,7 +173,7 @@ func (m *myRPC) SaveConfig() models.RequestResult {
 	if err != nil {
 		return models.RequestResult{Error: "cannot parse json data to landing page"}
 	}
-	oldlp := m.Rpch.GetLPByCampID(lp.CampaignID, lp.OrgID, m.Usex.UserID)
+	oldlp := m.Rpch.GetLPByCampID(lp.CampaignID, m.Usex.UserID)
 	if oldlp.ID.IsZero() {
 		return models.RequestResult{Error: "cannot found landing page"}
 	}
@@ -211,6 +221,25 @@ func (m *myRPC) Delete() models.RequestResult {
 
 	if !m.Rpch.DeleteLP(campids, m.Usex.UserID) {
 		return models.RequestResult{Error: "Could not delele landing page of campaign ID: " + m.Usex.Params}
+	}
+	return models.RequestResult{Status: 1, Data: ""}
+}
+
+func (m *myRPC) Publish() models.RequestResult {
+	if ok, _ := m.Usex.Modules["c3m-lptpl-user"]; !ok {
+		return models.RequestResult{Error: "permission denied"}
+	}
+	lp := m.Rpch.GetLPByCampID(m.Usex.Params, m.Usex.UserID)
+
+	if lp.ID.IsZero() {
+		return models.RequestResult{Error: "Landing page not found"}
+	}
+	//call service publish
+
+	//update lp last publish
+	lp.LastBuild = time.Now()
+	if !m.Rpch.SaveLP(lp) {
+		return models.RequestResult{Error: "Can not update Last Build time after publish"}
 	}
 	return models.RequestResult{Status: 1, Data: ""}
 }

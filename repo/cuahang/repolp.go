@@ -9,11 +9,11 @@ import (
 	"time"
 )
 
-func (r *Repo) GetLPByCampID(campID, orgID string, userID primitive.ObjectID) models.LandingPage {
+func (r *Repo) GetLPByCampID(campID string, userID primitive.ObjectID) models.LandingPage {
 	start := time.Now()
 	col := db.Collection("landingpages")
 	var rs models.LandingPage
-	err := col.FindOne(ctx, bson.M{"userid": userID, "campaignid": campID, "orgid": orgID}).Decode(&rs)
+	err := col.FindOne(ctx, bson.M{"userid": userID, "campaignid": campID}).Decode(&rs)
 	c3mcommon.CheckError("GetLPByCampID ", err)
 	r.QueryCount++
 	r.QueryTime += time.Since(start)
