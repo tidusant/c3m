@@ -24,7 +24,7 @@ var (
 	schemePath   = "/scheme"
 	schemeFolder = "./scheme"
 	rootFolder   = "./templates"
-	rootPath     = "/templates"
+	rootPath     = "/testtpl/templates"
 	apiserver    string
 	lpminserver  string
 )
