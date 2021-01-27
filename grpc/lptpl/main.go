@@ -315,7 +315,7 @@ func (m *myRPC) Approve() models.RequestResult {
 	tmplFolder := templateFolder + `/` + oldtpl.Path
 	imgfolder := "./cdn/lptemplate"
 	os.MkdirAll(imgfolder, 0777)
-	filename := mycrypto.StringRand(5) + mycrypto.StringRand(5) + ".jpg"
+	filename := mycrypto.StringRand(5) + mycrypto.StringRand(5) + mycrypto.StringRand(5) + ".jpg"
 
 	//read file
 	file, err := os.Open(tmplFolder + "/screenshot.jpg")
