@@ -21,7 +21,7 @@ import (
 var (
 	loaddatadone bool
 	layoutPath   = "./template/out"
-	schemePath   = "/scheme"
+	schemePath   = "/testtpl/scheme"
 	schemeFolder = "./scheme"
 	rootFolder   = "./templates"
 	rootPath     = "/testtpl/templates"
