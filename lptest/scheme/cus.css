@@ -126,8 +126,6 @@ body.blur-theme::before, body.mobile.blur-theme .body-bg::before {
     border-radius: 50%;
     border: 3px solid transparent;
     border-top-color: #e85656;
-    -webkit-transform: translate3d(0, 0, 0);
-    transform: translate3d(0, 0, 0);
     backface-visibility: hidden;
     -webkit-animation: spin 2s linear infinite;
     animation: spin 2s linear infinite
