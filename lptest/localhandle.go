@@ -178,7 +178,7 @@ func GetTest(sex, tplname string, c *gin.Context) string {
 			}
 		}
 	}
-	customcss += `<link href="/scheme/tailwind.css" rel="stylesheet">`
+	customcss += `<link href="` + schemePath + `/tailwind.css" rel="stylesheet">`
 	s = strings.Replace(s, "{{customcss}}", customcss, -1)
 	//render js script
 	customjs := ``
