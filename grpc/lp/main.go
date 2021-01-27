@@ -1,13 +1,16 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
+	"github.com/jlaffaye/ftp"
 	"github.com/tidusant/c3m/common/c3mcommon"
 	"github.com/tidusant/c3m/common/mycrypto"
 	maingrpc "github.com/tidusant/c3m/grpc"
 	pb "github.com/tidusant/c3m/grpc/protoc"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"io/ioutil"
 	"strings"
 	"time"
 
@@ -243,11 +246,32 @@ func (m *myRPC) Publish() models.RequestResult {
 	if lptpl.ID.IsZero() {
 		return models.RequestResult{Error: "Landing page template not found"}
 	}
-	//call service publish
-	bodystr := c3mcommon.RequestAPI2(LPminserver+"/publish", lptpl.Path, m.Usex.Session+","+lp.Content)
 
+	//build content for publish
+	if lp.Path == "" {
+		lp.Path = "3cMFwROc8L" //mycrypto.StringRand(5)+mycrypto.StringRand(5)
+	}
+	publishFolder := "./templates/" + lptpl.Path + "/publish/" + lp.Path
+	os.RemoveAll(publishFolder)
+	err := os.MkdirAll(publishFolder, 0775)
+	if err != nil {
+		return models.RequestResult{Error: err.Error()}
+	}
+	//create content
+	content, err := mycrypto.DecompressFromBase64(lp.Content)
+	if err != nil {
+		return models.RequestResult{Error: err.Error()}
+	}
+	err = ioutil.WriteFile(publishFolder+"/content.html", []byte(content), 0644)
+	if err != nil {
+		return models.RequestResult{Error: err.Error()}
+	}
+	//call service publish
+
+	bodystr := c3mcommon.RequestAPI2(LPminserver+"/publish", lptpl.Path, m.Usex.Session+","+lp.Path)
+	log.Debug(bodystr)
 	var rs models.RequestResult
-	err := json.Unmarshal([]byte(bodystr), &rs)
+	err = json.Unmarshal([]byte(bodystr), &rs)
 
 	if err != nil {
 		return models.RequestResult{Error: err.Error()}
@@ -256,12 +280,34 @@ func (m *myRPC) Publish() models.RequestResult {
 		return models.RequestResult{Error: rs.Error}
 	}
 
+	if lp.CustomHost {
+		//connect ftp
+		ftpclient, err := ftp.Dial(lp.DomainName)
+		if err == nil {
+			err = ftpclient.Login(lp.FTPUser, lp.FTPPass)
+		}
+		// perform copy
+		if err == nil {
+			file, err := os.Open(publishFolder + "/index.html")
+			if c3mcommon.CheckError("Read file index.html", err) {
+				err = ftpclient.Stor("./index.html", bufio.NewReader(file))
+				file.Close()
+				if err == nil {
+					file, err = os.Open(publishFolder + "/style.css")
+					if c3mcommon.CheckError("Read file style.css", err) {
+						err = ftpclient.Stor("./style.css", bufio.NewReader(file))
+						file.Close()
+					}
+				}
+			}
+		}
+		ftpclient.Quit()
+	} else {
+		//using .c3m.site domain
+	}
+
 	//update lp last publish
 	lp.LastBuild = time.Now()
-	lp.Path = lp.DomainName
-	if !lp.CustomHost {
-		lp.Path += ".c3m.site"
-	}
 	if !m.Rpch.SaveLP(lp) {
 		return models.RequestResult{Error: "Can not update Last Build time after publish"}
 	}

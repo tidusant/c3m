@@ -20,12 +20,22 @@ spec:
       labels:
         app: c3m-grpc-lp
     spec:
+      volumes:
+        - name: lptemplate-volume
+          persistentVolumeClaim:
+            claimName: c3m-grpc-lptpl-pvc
+
       containers:
         - name: c3m-grpc-lp #1st container
           image: tidusant/c3m-grpc-lp:latest #Dockerhub image
+          volumeMounts:
+            - mountPath: /app/templates
+              name: lptemplate-volume
           ports:
             - containerPort: 8906 #Exposes the port 8901 of the container
           env:
+            - name: LPMIN_ADD
+              value: "http://c3mweb-lpmin-service:8090"
             - name: CHADMIN_URI
               valueFrom:
                 secretKeyRef:
