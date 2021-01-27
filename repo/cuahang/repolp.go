@@ -52,6 +52,10 @@ func (r *Repo) SaveLP(lp models.LandingPage) bool {
 			"sfuserid":     lp.SFUserID,
 			"modified":     lp.Modified,
 			"lptemplateid": lp.LPTemplateID,
+			"customhost":   lp.CustomHost,
+			"domainname":   lp.DomainName,
+			"ftpuser":      lp.FTPUser,
+			"ftppass":      lp.FTPPass,
 		}}
 
 		_, err := col.UpdateOne(ctx, filter, update)
