@@ -1,15 +1,15 @@
 package main
 
 import (
-	"archive/zip"
 	"bytes"
 	"compress/gzip"
 	"encoding/base64"
+	"github.com/tidusant/c3m/common/c3mcommon"
 	"github.com/tidusant/c3m/common/mycrypto"
 	maingrpc "github.com/tidusant/c3m/grpc"
 	pb "github.com/tidusant/c3m/grpc/protoc"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"io"
+	"image"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
@@ -243,74 +243,108 @@ func (m *myRPC) Approve() models.RequestResult {
 		return models.RequestResult{Error: "something wrong"}
 	}
 
-	//zip file
+	//=======================zip file
+	//tmplFolder := templateFolder + `/` + oldtpl.Path
+	//zipfile, err := os.Create(templateFolder + `/` + oldtpl.Path + `.zip`)
+	//if err != nil {
+	//	return models.RequestResult{Error: err.Error()}
+	//}
+	//defer zipfile.Close()
+	//
+	//archive := zip.NewWriter(zipfile)
+	//defer archive.Close()
+	//
+	//info, err := os.Stat(tmplFolder)
+	//if err != nil {
+	//	return models.RequestResult{Error: err.Error()}
+	//}
+	//
+	//var baseDir string
+	//if info.IsDir() {
+	//	baseDir = filepath.Base(tmplFolder)
+	//}
+	//
+	//filepath.Walk(tmplFolder, func(path string, info os.FileInfo, err error) error {
+	//	if err != nil {
+	//		return err
+	//	}
+	//	//skip folder images
+	//
+	//	if path == tmplFolder+"/content.html" || path == tmplFolder+"/items.html" || path == tmplFolder+"/navitem.html" || strings.Index(path, tmplFolder+"/css") == 0 || strings.Index(path, tmplFolder+"/js") == 0 || strings.Index(path, tmplFolder+"/itemicons") == 0 {
+	//
+	//		header, err := zip.FileInfoHeader(info)
+	//		if err != nil {
+	//			return err
+	//		}
+	//
+	//		if baseDir != "" {
+	//			header.Name = filepath.Join(baseDir, strings.TrimPrefix(path, tmplFolder))
+	//		}
+	//
+	//		if info.IsDir() {
+	//			header.Name += "/"
+	//		} else {
+	//			header.Method = zip.Deflate
+	//		}
+	//
+	//		writer, err := archive.CreateHeader(header)
+	//		if err != nil {
+	//			return err
+	//		}
+	//
+	//		if info.IsDir() {
+	//			return nil
+	//		}
+	//
+	//		file, err := os.Open(path)
+	//		if err != nil {
+	//			return err
+	//		}
+	//		defer file.Close()
+	//		_, err = io.Copy(writer, file)
+	//		return err
+	//	}
+	//	return nil
+	//})
+	//if err != nil {
+	//	return models.RequestResult{Error: err.Error()}
+	//}
+	//=======================
+
+	//======publish screen shot
 	tmplFolder := templateFolder + `/` + oldtpl.Path
-	zipfile, err := os.Create(templateFolder + `/` + oldtpl.Path + `.zip`)
+	imgfolder := "./cdn/lptemplate"
+	os.MkdirAll(imgfolder, 0777)
+	filename := mycrypto.StringRand(5) + mycrypto.StringRand(5) + ".jpg"
+
+	//read file
+	file, err := os.Open(tmplFolder + "/screenshot.jpg")
 	if err != nil {
-		return models.RequestResult{Error: err.Error()}
+		return models.RequestResult{Error: "error reading screenshot"}
 	}
-	defer zipfile.Close()
-
-	archive := zip.NewWriter(zipfile)
-	defer archive.Close()
-
-	info, err := os.Stat(tmplFolder)
+	imageconfig, _, _ := image.DecodeConfig(file)
+	fileb, err := ioutil.ReadFile(tmplFolder + "/screenshot.jpg")
 	if err != nil {
-		return models.RequestResult{Error: err.Error()}
+		return models.RequestResult{Error: "error reading screenshot"}
 	}
-
-	var baseDir string
-	if info.IsDir() {
-		baseDir = filepath.Base(tmplFolder)
+	//copy file
+	err = ioutil.WriteFile(imgfolder+"/"+filename, fileb, 0777)
+	if err != nil {
+		return models.RequestResult{Error: "error creating screenshot"}
 	}
-
-	filepath.Walk(tmplFolder, func(path string, info os.FileInfo, err error) error {
+	//create thumb
+	thumbwidth := 200
+	if imageconfig.Width > thumbwidth {
+		fileb, _ = c3mcommon.ImgResize(fileb, uint(thumbwidth), 0)
+		err = ioutil.WriteFile(imgfolder+"/thumb_"+filename, fileb, 0777)
 		if err != nil {
-			return err
+			return models.RequestResult{Error: "error creating thumb screenshot"}
 		}
-		//skip folder images
-
-		if path == tmplFolder+"/content.html" || path == tmplFolder+"/items.html" || path == tmplFolder+"/navitem.html" || strings.Index(path, tmplFolder+"/css") == 0 || strings.Index(path, tmplFolder+"/js") == 0 || strings.Index(path, tmplFolder+"/itemicons") == 0 {
-
-			header, err := zip.FileInfoHeader(info)
-			if err != nil {
-				return err
-			}
-
-			if baseDir != "" {
-				header.Name = filepath.Join(baseDir, strings.TrimPrefix(path, tmplFolder))
-			}
-
-			if info.IsDir() {
-				header.Name += "/"
-			} else {
-				header.Method = zip.Deflate
-			}
-
-			writer, err := archive.CreateHeader(header)
-			if err != nil {
-				return err
-			}
-
-			if info.IsDir() {
-				return nil
-			}
-
-			file, err := os.Open(path)
-			if err != nil {
-				return err
-			}
-			defer file.Close()
-			_, err = io.Copy(writer, file)
-			return err
-		}
-		return nil
-	})
-	if err != nil {
-		return models.RequestResult{Error: err.Error()}
 	}
 
+	//=======================
 	//update database
+	oldtpl.ScreenShot = filename
 	oldtpl.Status = 1
 	err = m.Rpch.UpdateLpTemplate(oldtpl)
 	if err != nil {
