@@ -266,7 +266,7 @@ func ReadTemplateTool(tplname string) ([]Tool, error) {
 
 			tool.Name = strs[0]
 			tool.Title = strs[1]
-			tool.Icon = rootPath + "/" + tplname + "/itemicons/" + strs[2]
+			tool.Icon = rootPath + "/templates/" + tplname + "/itemicons/" + strs[2]
 
 		} else if line == "#===child===#" {
 			if child.Name != "" {
