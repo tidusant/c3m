@@ -54,7 +54,6 @@ func (m *MainRPC) InitUsex(ctx context.Context, in *pb.RPCRequest, name, ver str
 	//	}
 	//	m.Usex.Shop = shop
 	//}
-
 	return rt
 }
 
@@ -65,9 +64,8 @@ func (m *MainRPC) ReturnRespone(rs models.RequestResult) *pb.RPCResponse {
 	m.resp.Data = string(b)
 	m.resp.Query = int32(m.Rpch.QueryCount + m.QueryCount)
 	m.resp.Time = time.Since(m.start).String()
-	log.Debugf("query count :%d", m.resp.Query)
-	log.Debugf("query time :%s", m.resp.Time)
 
+	log.Debugf("return :%+v", m.resp)
 	return m.resp
 }
 
