@@ -174,7 +174,7 @@ func GetTest(sex, tplname string, c *gin.Context) string {
 		files, _ := ioutil.ReadDir(tplFolder + "/css")
 		for _, f := range files {
 			if !f.IsDir() {
-				customcss += `<link href="` + rootPath + "/" + tplname + `/css/` + f.Name() + `" rel="stylesheet">`
+				customcss += `<link href="` + rootPath + "/templates/" + tplname + `/css/` + f.Name() + `" rel="stylesheet">`
 			}
 		}
 	}
@@ -289,7 +289,7 @@ func ReadTemplateTool(tplname string) ([]Tool, error) {
 
 			child.Name = strs[0]
 			child.Title = strs[1]
-			child.Icon = rootPath + "/" + tplname + "/itemicons/" + strs[2]
+			child.Icon = rootPath + "/templates" + tplname + "/itemicons/" + strs[2]
 		} else {
 			contentBuffer.WriteString(lineorg)
 		}
