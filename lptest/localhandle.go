@@ -178,7 +178,7 @@ func GetTest(sex, tplname string, c *gin.Context) string {
 			}
 		}
 	}
-	customcss += `<link href="` + schemePath + `/tailwind.css" rel="stylesheet">`
+	customcss += `<link href="` + rootPath + `/scheme/tailwind.css" rel="stylesheet">`
 	s = strings.Replace(s, "{{customcss}}", customcss, -1)
 	//render js script
 	customjs := ``
@@ -186,7 +186,7 @@ func GetTest(sex, tplname string, c *gin.Context) string {
 		files, _ := ioutil.ReadDir(tplFolder + "/js")
 		for _, f := range files {
 			if !f.IsDir() {
-				customjs += `<script src="` + rootPath + "/" + tplname + `/js/` + f.Name() + `"></script>`
+				customjs += `<script src="` + rootPath + "/templates/" + tplname + `/js/` + f.Name() + `"></script>`
 			}
 		}
 	}
@@ -194,7 +194,8 @@ func GetTest(sex, tplname string, c *gin.Context) string {
 	s = strings.Replace(s, "{{customiframejs}}", strings.Replace(customjs, `</script>`, `<\/script>`, -1), -1)
 	s = strings.Replace(s, "{{templatename}}", tplname, -1)
 	s = strings.Replace(s, "{{submiturl}}", mycrypto.EncDat2(sex+"|"+tplname), -1)
-	s = strings.Replace(s, "{{schemePath}}", schemePath, -1)
+
+	s = strings.Replace(s, "{{rootPath}}", rootPath, -1)
 	// //Convert your cached html string to byte array
 	// c.Writer.Write([]byte(result))
 	return s

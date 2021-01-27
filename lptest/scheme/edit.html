@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <title>Landing page builder</title>
 
-    <link href="{{schemePath}}/dragula.css" rel="stylesheet">
-    <link href="{{schemePath}}/cus.css" rel="stylesheet">
+    <link href="{{rootPath}}/scheme/dragula.css" rel="stylesheet">
+    <link href="{{rootPath}}/scheme/cus.css" rel="stylesheet">
 
     {{customcss}}
 </head>
@@ -241,12 +241,12 @@
     }
     function SubmitTest(){
         document.querySelector("#preloader").classList.remove("hidden")
-        $.post('/test/submit/{{submiturl}}',{"data":document.querySelector("div[lp-data-id=landingpage-content]").innerHTML}).done((rs)=>{
+        $.post('{{rootPath}}/test/submit/{{submiturl}}',{"data":document.querySelector("div[lp-data-id=landingpage-content]").innerHTML}).done((rs)=>{
             console.log(rs)
             try{
                 rs=JSON.parse(rs)
                 if(rs.status==1){
-                    window.location="/templates/{{templatename}}/out/"
+                    window.location="{{rootPath}}/templates/{{templatename}}/out/"
                 }else{
                     alert(rs.error)
                 }

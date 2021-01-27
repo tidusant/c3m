@@ -21,10 +21,10 @@ import (
 var (
 	loaddatadone bool
 	layoutPath   = "./template/out"
-	schemePath   = "/testtpl/scheme"
+
 	schemeFolder = "./scheme"
 	rootFolder   = "./templates"
-	rootPath     = "/testtpl/templates"
+	rootPath     = "/testtpl"
 	apiserver    string
 	lpminserver  string
 )
