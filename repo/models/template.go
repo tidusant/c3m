@@ -21,8 +21,9 @@ type LPTemplate struct {
 	User        string             `bson:"user"`
 }
 type LandingPage struct {
-	ID           primitive.ObjectID `bson:"_id,omitempty"`
-	Path         string             `bson:"path"`
+	ID   primitive.ObjectID `bson:"_id,omitempty"`
+	Path string             `bson:"path"`
+
 	UserID       primitive.ObjectID `bson:"userid"`
 	LPTemplateID primitive.ObjectID `bson:"lptemplateid"`
 	CustomHost   bool               `bson:"customhost"`

@@ -92,11 +92,23 @@ func (m *myRPC) Save() models.RequestResult {
 		return models.RequestResult{Error: "params is invalid"}
 	}
 	lp := m.Rpch.GetLPByCampID(campID, m.Usex.UserID)
+	tpl, err := m.Rpch.GetLpTemplateById(tplID)
+	if err != nil {
+		return models.RequestResult{Error: err.Error()}
+	}
 	if lp.ID.IsZero() {
 		lp.UserID = m.Usex.UserID
 		lp.Created = time.Now()
 		lp.OrgID = orgID
 		lp.CampaignID = campID
+		lp.Path = mycrypto.StringRand(5) + mycrypto.StringRand(5)
+		lp.Path = mycrypto.Encode4(tpl.Path + "/publish/" + lp.Path)
+	} else {
+		//if change tpl then remove publish folder
+		if lp.LPTemplateID != tplID {
+			publishFolder := "./templates/" + mycrypto.Decode4(lp.Path)
+			os.RemoveAll(publishFolder)
+		}
 	}
 	lp.Modified = time.Now()
 	lp.LPTemplateID = tplID
@@ -224,9 +236,14 @@ func (m *myRPC) Delete() models.RequestResult {
 	if ok, _ := m.Usex.Modules["c3m-lptpl-user"]; !ok {
 		return models.RequestResult{Error: "permission denied"}
 	}
-	campids := strings.Split(m.Usex.Params, ",")
+	campidsstr := strings.Split(m.Usex.Params, ",")
 
-	if !m.Rpch.DeleteLP(campids, m.Usex.UserID) {
+	//detele
+	camps := m.Rpch.GetAllLpByCampIds(campidsstr, m.Usex.UserID)
+	for _, v := range camps {
+		os.RemoveAll("./templates/" + mycrypto.Decode4(v.Path))
+	}
+	if !m.Rpch.DeleteLP(campidsstr, m.Usex.UserID) {
 		return models.RequestResult{Error: "Could not delele landing page of campaign ID: " + m.Usex.Params}
 	}
 	return models.RequestResult{Status: 1, Data: ""}
@@ -241,17 +258,10 @@ func (m *myRPC) Publish() models.RequestResult {
 	if lp.ID.IsZero() {
 		return models.RequestResult{Error: "Landing page not found"}
 	}
-	//load template
-	lptpl, _ := m.Rpch.GetLpTemplateById(lp.LPTemplateID)
-	if lptpl.ID.IsZero() {
-		return models.RequestResult{Error: "Landing page template not found"}
-	}
 
 	//build content for publish
-	if lp.Path == "" {
-		lp.Path = "3cMFwROc8L" //mycrypto.StringRand(5)+mycrypto.StringRand(5)
-	}
-	publishFolder := "./templates/" + lptpl.Path + "/publish/" + lp.Path
+	lppath := mycrypto.Decode4(lp.Path)
+	publishFolder := "./templates/" + lppath
 	os.RemoveAll(publishFolder)
 	err := os.MkdirAll(publishFolder, 0775)
 	if err != nil {
@@ -267,8 +277,11 @@ func (m *myRPC) Publish() models.RequestResult {
 		return models.RequestResult{Error: err.Error()}
 	}
 	//call service publish
-
-	bodystr := c3mcommon.RequestAPI2(LPminserver+"/publish", lptpl.Path, m.Usex.Session+","+lp.Path)
+	argspath := strings.Split(lppath, "/")
+	if len(argspath) < 3 {
+		return models.RequestResult{Error: "landing page path invalid"}
+	}
+	bodystr := c3mcommon.RequestAPI2(LPminserver+"/publish", argspath[0], m.Usex.Session+","+argspath[2])
 	log.Debug(bodystr)
 	var rs models.RequestResult
 	err = json.Unmarshal([]byte(bodystr), &rs)
@@ -278,6 +291,9 @@ func (m *myRPC) Publish() models.RequestResult {
 	}
 	if rs.Status != 1 {
 		return models.RequestResult{Error: rs.Error}
+	}
+	if lp.DomainName == "" {
+		return models.RequestResult{Error: "Domain Name is empty"}
 	}
 
 	if lp.CustomHost {

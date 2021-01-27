@@ -33,6 +33,17 @@ func (r *Repo) GetAllLP(userID primitive.ObjectID) []models.LandingPage {
 	r.QueryTime += time.Since(start)
 	return rs
 }
+func (r *Repo) GetAllLpByCampIds(campIds []string, userid primitive.ObjectID) []models.LPTemplate {
+	col := db.Collection("landingpages")
+	var rs []models.LPTemplate
+	cond := bson.M{"userid": userid, "campaignid": bson.M{"$in": campIds}}
+	cursor, err := col.Find(ctx, cond)
+	r.QueryCount++
+	if err = cursor.All(ctx, &rs); err != nil {
+		c3mcommon.CheckError("AddSFUser ", err)
+	}
+	return rs
+}
 func (r *Repo) SaveLP(lp models.LandingPage) bool {
 	start := time.Now()
 	col := db.Collection("landingpages")
