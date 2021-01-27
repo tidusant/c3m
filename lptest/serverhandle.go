@@ -1,10 +1,8 @@
 package main
 
 import (
-	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/tidusant/c3m/common/c3mcommon"
-	"github.com/tidusant/c3m/repo/models"
 	"io/ioutil"
 	"os"
 )
@@ -69,15 +67,5 @@ func SubmitTest(sex, tplname string, c *gin.Context) string {
 	//call test server to purgecss and minify
 	bodystr := c3mcommon.RequestAPI2(lpminserver+"/purge", tplname, sex)
 	return bodystr
-	var rs models.RequestResult
-	err = json.Unmarshal([]byte(bodystr), &rs)
 
-	if err != nil {
-		return err.Error()
-	}
-	if rs.Status != 1 {
-
-		return rs.Error
-	}
-	return "ok"
 }

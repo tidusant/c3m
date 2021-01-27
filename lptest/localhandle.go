@@ -194,6 +194,7 @@ func GetTest(sex, tplname string, c *gin.Context) string {
 	s = strings.Replace(s, "{{customiframejs}}", strings.Replace(customjs, `</script>`, `<\/script>`, -1), -1)
 	s = strings.Replace(s, "{{templatename}}", tplname, -1)
 	s = strings.Replace(s, "{{submiturl}}", mycrypto.EncDat2(sex+"|"+tplname), -1)
+	s = strings.Replace(s, "{{schemePath}}", schemePath, -1)
 	// //Convert your cached html string to byte array
 	// c.Writer.Write([]byte(result))
 	return s
