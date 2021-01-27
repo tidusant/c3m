@@ -261,6 +261,11 @@ func (m *myRPC) Publish() models.RequestResult {
 
 	//build content for publish
 	lppath := mycrypto.Decode4(lp.Path)
+	argspath := strings.Split(lppath, "/")
+	if len(argspath) < 3 {
+		return models.RequestResult{Error: "landing page path invalid"}
+	}
+
 	publishFolder := "./templates/" + lppath
 	os.RemoveAll(publishFolder)
 	err := os.MkdirAll(publishFolder, 0775)
@@ -277,10 +282,7 @@ func (m *myRPC) Publish() models.RequestResult {
 		return models.RequestResult{Error: err.Error()}
 	}
 	//call service publish
-	argspath := strings.Split(lppath, "/")
-	if len(argspath) < 3 {
-		return models.RequestResult{Error: "landing page path invalid"}
-	}
+
 	bodystr := c3mcommon.RequestAPI2(LPminserver+"/publish", argspath[0], m.Usex.Session+","+argspath[2])
 	log.Debug(bodystr)
 	var rs models.RequestResult

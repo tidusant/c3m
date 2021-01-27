@@ -14,6 +14,7 @@ type LPTemplate struct {
 	Status      int                `bson:"status"` //-2: delete, -1: reject,0:local, 1: approved and publish, 2: waiting for approve
 	Description string             `bson:"description"`
 	Path        string             `bson:"path"`
+	ScreenShot  string             `bson:"screenshot"`
 	Name        string             `bson:"name"`
 	Viewed      int                `bson:"viewed"`
 	Installed   int                `bson:"installed"`
