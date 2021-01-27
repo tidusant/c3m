@@ -178,14 +178,14 @@ func (m *myRPC) SaveConfig() models.RequestResult {
 	var lp models.LandingPage
 	err = json.Unmarshal([]byte(data), &lp)
 	if err != nil {
-		return models.RequestResult{Error: "cannot parse json data to landing page"}
+		return models.RequestResult{Error: "cannot parse json data to landing page object"}
 	}
 	oldlp := m.Rpch.GetLPByCampID(lp.CampaignID, m.Usex.UserID)
 	if oldlp.ID.IsZero() {
 		return models.RequestResult{Error: "cannot found landing page"}
 	}
 	//check domain name
-	if lp.CustomHost {
+	if !lp.CustomHost {
 		if strings.Trim(lp.DomainName, " ") == "" {
 			return models.RequestResult{Error: "Domain Name is empty"}
 		}
