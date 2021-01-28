@@ -152,7 +152,7 @@ func callgRPC(name string, rpcRequest pb.RPCRequest) models.RequestResult {
 		return rs
 	}
 	// Contact the server and print out its response.
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 	defer cancel()
 	r, err := grpcConns[name].Call(ctx, &rpcRequest)
 	if err != nil {
@@ -166,7 +166,7 @@ func callgRPC(name string, rpcRequest pb.RPCRequest) models.RequestResult {
 				registerGrpc(context.Background(), name)
 			}(name)
 		} else {
-			rs.Error = "Error while parsing response data:" + err.Error()
+			rs.Error = err.Error()
 		}
 		return rs
 	}
