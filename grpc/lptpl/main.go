@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"context"
 
@@ -32,7 +33,7 @@ import (
 )
 
 const (
-	name           string = "lptemplate"
+	name           string = "lptpl"
 	ver            string = "1"
 	templateFolder        = "templates"
 )
@@ -46,10 +47,19 @@ type myRPC struct {
 	maingrpc.MainRPC
 }
 
-func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (*pb.RPCResponse, error) {
+func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (rt *pb.RPCResponse, err error) {
 	m := myRPC{}
 	//generate user information into usex by calling parent func (m *myRPC) InitUsex that return error string
 	rs := models.RequestResult{Error: m.InitUsex(ctx, in, name, ver)}
+	err = nil
+	defer func() {
+		if err := recover(); err != nil {
+			ioutil.WriteFile("templates/"+m.Usex.AppName+".panic.log", []byte(fmt.Sprint(time.Now().Format("2006-01-02 15:04:05")+" >> panic occurred:", err)), 0644)
+			rs.Error = "Something wrong"
+			rt = m.ReturnRespone(rs)
+		}
+
+	}()
 	//if not error then continue call func
 	if rs.Error == "" {
 		if m.Usex.Action == "s" {
@@ -70,10 +80,12 @@ func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (*pb.RPCResponse,
 			rs = m.LoadForUser()
 		} else {
 			//unknow action
-			return m.ReturnNilRespone(), nil
+			rt = m.ReturnNilRespone()
+			return
 		}
 	}
-	return m.ReturnRespone(rs), nil
+	rt = m.ReturnRespone(rs)
+	return
 }
 
 //load all template for test and approve
