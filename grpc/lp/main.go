@@ -46,6 +46,12 @@ var (
 
 func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (*pb.RPCResponse, error) {
 	m := myRPC{}
+	defer func() {
+		if err := recover(); err != nil {
+			ioutil.WriteFile("templates/lperror.log", []byte(fmt.Sprint("panic occurred:", err)), 0644)
+
+		}
+	}()
 	//generate user information into usex by calling parent func (m *myRPC) InitUsex that return error string
 	rs := models.RequestResult{Error: m.InitUsex(ctx, in, name, ver)}
 	//if not error then continue call func
@@ -203,13 +209,13 @@ func (m *myRPC) SaveConfig() models.RequestResult {
 			return models.RequestResult{Error: "Domain Name is empty"}
 		}
 		f := func(r rune) bool {
-			return r < '0' || r > 'z' || (r != '-' && r != '_')
+			return (r < '0' || r > 'z') && r != '-' && r != '_'
 		}
 		if strings.IndexFunc(lp.DomainName, f) != -1 {
-			return models.RequestResult{Error: "Found special char in Domain Name"}
+			return models.RequestResult{Error: "Found special char in URL"}
 		}
 		if len(strings.Trim(lp.DomainName, " ")) < 4 {
-			return models.RequestResult{Error: "Domain Name length must greater than 3"}
+			return models.RequestResult{Error: "URL length must greater than 3"}
 		}
 	} else {
 		if strings.Trim(lp.DomainName, " ") == "" {
@@ -258,12 +264,7 @@ func (m *myRPC) Delete() models.RequestResult {
 }
 
 func (m *myRPC) Publish() models.RequestResult {
-	defer func() {
-		if err := recover(); err != nil {
-			ioutil.WriteFile("templates/error.log", []byte(fmt.Sprint("panic occurred:", err)), 0644)
 
-		}
-	}()
 	if ok, _ := m.Usex.Modules["c3m-lptpl-user"]; !ok {
 		return models.RequestResult{Error: "permission denied"}
 	}
@@ -355,7 +356,6 @@ func main() {
 	}
 	//open service and listen
 	lis, err := net.Listen("tcp", ":"+port)
-	ioutil.WriteFile("templates/error.log", []byte(fmt.Sprint("tcp:", port)), 0644)
 	if err != nil {
 		log.Errorf("failed to listen: %v", err)
 	}
