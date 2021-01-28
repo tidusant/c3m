@@ -29,6 +29,7 @@ type LandingPage struct {
 	LPTemplateID primitive.ObjectID `bson:"lptemplateid"`
 	CustomHost   bool               `bson:"customhost"`
 	DomainName   string             `bson:"domainname"`
+	FTPHost      string             `bson:"ftphost"`
 	FTPUser      string             `bson:"ftpuser"`
 	FTPPass      string             `bson:"ftppass"`
 	Content      string             `bson:"content"`

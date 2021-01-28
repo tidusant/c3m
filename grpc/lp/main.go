@@ -11,6 +11,7 @@ import (
 	pb "github.com/tidusant/c3m/grpc/protoc"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"io/ioutil"
+	"regexp"
 	"strings"
 	"time"
 
@@ -212,7 +213,14 @@ func (m *myRPC) SaveConfig() models.RequestResult {
 		}
 	} else {
 		if strings.Trim(lp.DomainName, " ") == "" {
-			return models.RequestResult{Error: "Domain Name is empty"}
+			return models.RequestResult{Error: "URL is empty"}
+		}
+		regex := `(http(s)?):\/\/[(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)`
+		if ok, _ := regexp.MatchString(regex, lp.DomainName); !ok {
+			return models.RequestResult{Error: "URL is invalid"}
+		}
+		if strings.Trim(lp.FTPHost, " ") == "" {
+			return models.RequestResult{Error: "FTPHost is empty"}
 		}
 		if strings.Trim(lp.FTPUser, " ") == "" {
 			return models.RequestResult{Error: "FTPUser is empty"}
@@ -250,6 +258,13 @@ func (m *myRPC) Delete() models.RequestResult {
 }
 
 func (m *myRPC) Publish() models.RequestResult {
+	defer func() {
+		if err := recover(); err != nil {
+			ioutil.WriteFile("templates/error.log", []byte(fmt.Sprint("panic occurred:", err)), 0644)
+
+		}
+	}()
+
 	if ok, _ := m.Usex.Modules["c3m-lptpl-user"]; !ok {
 		return models.RequestResult{Error: "permission denied"}
 	}
@@ -300,7 +315,7 @@ func (m *myRPC) Publish() models.RequestResult {
 
 	if lp.CustomHost {
 		//connect ftp
-		ftpclient, err := ftp.Dial(lp.DomainName)
+		ftpclient, err := ftp.Dial(lp.FTPHost)
 		if err == nil {
 			err = ftpclient.Login(lp.FTPUser, lp.FTPPass)
 		}
@@ -341,15 +356,10 @@ func main() {
 	}
 	//open service and listen
 	lis, err := net.Listen("tcp", ":"+port)
+	ioutil.WriteFile("templates/error.log", []byte(fmt.Sprint("tcp:", port)), 0644)
 	if err != nil {
 		log.Errorf("failed to listen: %v", err)
 	}
-	defer func() {
-		if err := recover(); err != nil {
-			ioutil.WriteFile("templates/error.log", []byte(fmt.Sprint("panic occurred:", err)), 0644)
-
-		}
-	}()
 
 	LPminserver = os.Getenv("LPMIN_ADD")
 	s := grpc.NewServer()
