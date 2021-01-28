@@ -318,13 +318,15 @@ func (m *myRPC) Publish() models.RequestResult {
 	if rs.Status != 1 {
 		return models.RequestResult{Error: rs.Error}
 	}
-
+	errStr := ""
 	if lp.CustomHost {
 		//connect ftp
 		var ftpclient *ftp.ServerConn
-		ftpclient, err := ftp.Dial(lp.FTPHost)
+		log.Debugf("connecting to %s", lp.FTPHost)
+		ftpclient, err := ftp.Dial(lp.FTPHost + ":21")
+
 		if ftpclient == nil {
-			err = fmt.Errorf("Cannot connect to %s" + lp.FTPHost)
+			errStr = fmt.Sprintf("Cannot connect to %s" + lp.FTPHost)
 		}
 		if err == nil {
 			err = ftpclient.Login(lp.FTPUser, lp.FTPPass)
@@ -335,23 +337,37 @@ func (m *myRPC) Publish() models.RequestResult {
 			file, err := os.Open(publishFolder + "/index.html")
 			if c3mcommon.CheckError("Read file index.html", err) {
 				err = ftpclient.Stor("./index.html", bufio.NewReader(file))
+				c3mcommon.CheckError("Store file index.html to host "+lp.FTPHost, err)
 				file.Close()
 				if err == nil {
 					file, err = os.Open(publishFolder + "/style.css")
 					if c3mcommon.CheckError("Read file style.css", err) {
 						err = ftpclient.Stor("./style.css", bufio.NewReader(file))
+						c3mcommon.CheckError("Store file style.css to host "+lp.FTPHost, err)
 						file.Close()
+						if err != nil {
+							errStr = fmt.Sprintf("Error when storing file to host: Cannot write file to host %s", lp.FTPHost)
+						}
+					} else {
+						errStr = fmt.Sprintf("Error when storing file to host: Cannot read file style.css of landing page")
 					}
+				} else {
+					errStr = fmt.Sprintf("Error when storing file to host: Cannot write file to host %s", lp.FTPHost)
 				}
+			} else {
+				errStr = fmt.Sprintf("Error when storing file to host: Cannot read file index.html of landing page")
 			}
+		} else {
+			errStr = fmt.Sprintf("Cannot logged in to %s" + lp.FTPHost)
 		}
 		ftpclient.Quit()
 	} else {
 		//using .c3m.site domain
+		log.Debugf("using .c3m.site domain")
 	}
 
-	if err != nil {
-		return models.RequestResult{Error: err.Error()}
+	if errStr != "" {
+		return models.RequestResult{Error: errStr}
 	}
 	//update lp last publish
 	lp.LastBuild = time.Now()
