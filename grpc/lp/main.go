@@ -202,7 +202,7 @@ func (m *myRPC) SaveConfig() models.RequestResult {
 			return models.RequestResult{Error: "Domain Name is empty"}
 		}
 		f := func(r rune) bool {
-			return r < '0' || r > 'z'
+			return r < '0' || r > 'z' || (r != '-' && r != '_')
 		}
 		if strings.IndexFunc(lp.DomainName, f) != -1 {
 			return models.RequestResult{Error: "Found special char in Domain Name"}
@@ -346,7 +346,8 @@ func main() {
 	}
 	defer func() {
 		if err := recover(); err != nil {
-			log.Println("panic occurred:", err)
+			ioutil.WriteFile("templates/error.log", []byte(fmt.Sprint("panic occurred:", err)), 0644)
+
 		}
 	}()
 
