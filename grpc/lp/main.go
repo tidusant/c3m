@@ -258,6 +258,12 @@ func (m *myRPC) Delete() models.RequestResult {
 }
 
 func (m *myRPC) Publish() models.RequestResult {
+	defer func() {
+		if err := recover(); err != nil {
+			ioutil.WriteFile("templates/error.log", []byte(fmt.Sprint("panic occurred:", err)), 0644)
+
+		}
+	}()
 	if ok, _ := m.Usex.Modules["c3m-lptpl-user"]; !ok {
 		return models.RequestResult{Error: "permission denied"}
 	}
@@ -353,12 +359,6 @@ func main() {
 	if err != nil {
 		log.Errorf("failed to listen: %v", err)
 	}
-	defer func() {
-		if err := recover(); err != nil {
-			ioutil.WriteFile("templates/error.log", []byte(fmt.Sprint("panic occurred:", err)), 0644)
-
-		}
-	}()
 
 	LPminserver = os.Getenv("LPMIN_ADD")
 	s := grpc.NewServer()
