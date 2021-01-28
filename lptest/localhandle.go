@@ -289,7 +289,7 @@ func ReadTemplateTool(tplname string) ([]Tool, error) {
 
 			child.Name = strs[0]
 			child.Title = strs[1]
-			child.Icon = rootPath + "/templates" + tplname + "/itemicons/" + strs[2]
+			child.Icon = rootPath + "/templates/" + tplname + "/itemicons/" + strs[2]
 		} else {
 			contentBuffer.WriteString(lineorg)
 		}
