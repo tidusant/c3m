@@ -344,6 +344,12 @@ func main() {
 	if err != nil {
 		log.Errorf("failed to listen: %v", err)
 	}
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("panic occurred:", err)
+		}
+	}()
+
 	LPminserver = os.Getenv("LPMIN_ADD")
 	s := grpc.NewServer()
 	fmt.Printf("listening on %s\n", port)
