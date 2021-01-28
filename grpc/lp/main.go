@@ -140,14 +140,14 @@ func (m *myRPC) SFLoadAll() models.RequestResult {
 		for _, v := range lps {
 			rt += fmt.Sprintf(`,"%s":{"CustomHost":%t,
 "DomainName":"%s",
+"FTPHost":"%s",
 "FTPUser":"%s",
-"FTPPass":"%s",
 "LPTemplateID":"%s",
 "Created":"%s",
 "LastBuild":"%s",
 "Modified":"%s",
 "Submitted":%d,
-"Viewed":%d}`, v.CampaignID, v.CustomHost, v.DomainName, v.FTPUser, v.FTPPass, v.LPTemplateID.Hex(), v.Created, v.LastBuild, v.Modified, v.Submitted, v.Viewed)
+"Viewed":%d}`, v.CampaignID, v.CustomHost, v.DomainName, v.FTPHost, v.FTPUser, v.LPTemplateID.Hex(), v.Created, v.LastBuild, v.Modified, v.Submitted, v.Viewed)
 
 			//remove campid in campIdsWillRemove list
 			if ok, i := c3mcommon.InArray(v.CampaignID, campIdsWillRemove); ok {
@@ -344,6 +344,9 @@ func (m *myRPC) Publish() models.RequestResult {
 		//using .c3m.site domain
 	}
 
+	if err != nil {
+		return models.RequestResult{Error: err.Error()}
+	}
 	//update lp last publish
 	lp.LastBuild = time.Now()
 	if !m.Rpch.SaveLP(lp) {
