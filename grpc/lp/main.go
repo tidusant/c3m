@@ -48,8 +48,7 @@ func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (*pb.RPCResponse,
 	m := myRPC{}
 	defer func() {
 		if err := recover(); err != nil {
-			ioutil.WriteFile("templates/lperror.log", []byte(fmt.Sprint("panic occurred:", err)), 0644)
-
+			ioutil.WriteFile("templates/lperror.log", []byte(fmt.Sprint(time.Now().Format("2006-01-02 15:04:05")+" >> panic occurred:", err)), 0644)
 		}
 	}()
 	//generate user information into usex by calling parent func (m *myRPC) InitUsex that return error string
