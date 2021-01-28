@@ -273,6 +273,9 @@ func (m *myRPC) Publish() models.RequestResult {
 	if lp.ID.IsZero() {
 		return models.RequestResult{Error: "Landing page not found"}
 	}
+	if lp.DomainName == "" {
+		return models.RequestResult{Error: "Domain Name is empty"}
+	}
 
 	//build content for publish
 	lppath := mycrypto.Decode4(lp.Path)
@@ -299,7 +302,7 @@ func (m *myRPC) Publish() models.RequestResult {
 	//call service publish
 
 	bodystr := c3mcommon.RequestAPI2(LPminserver+"/publish", argspath[0], m.Usex.Session+","+argspath[2])
-	log.Debug(bodystr)
+	log.Debugf("bodystr rt:%s", bodystr)
 	var rs models.RequestResult
 	err = json.Unmarshal([]byte(bodystr), &rs)
 
@@ -309,16 +312,18 @@ func (m *myRPC) Publish() models.RequestResult {
 	if rs.Status != 1 {
 		return models.RequestResult{Error: rs.Error}
 	}
-	if lp.DomainName == "" {
-		return models.RequestResult{Error: "Domain Name is empty"}
-	}
 
 	if lp.CustomHost {
 		//connect ftp
-		ftpclient, err := ftp.Dial(lp.DomainName)
+		var ftpclient *ftp.ServerConn
+		ftpclient, err := ftp.Dial(lp.FTPHost)
+		if ftpclient == nil {
+			err = fmt.Errorf("Cannot connect to %s" + lp.FTPHost)
+		}
 		if err == nil {
 			err = ftpclient.Login(lp.FTPUser, lp.FTPPass)
 		}
+
 		// perform copy
 		if err == nil {
 			file, err := os.Open(publishFolder + "/index.html")
