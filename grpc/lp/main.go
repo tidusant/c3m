@@ -50,7 +50,7 @@ func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (rt *pb.RPCRespon
 	err = nil
 	defer func() {
 		if err := recover(); err != nil {
-			ioutil.WriteFile("templates/lperror.log", []byte(fmt.Sprint(time.Now().Format("2006-01-02 15:04:05")+" >> panic occurred:", err)), 0644)
+			ioutil.WriteFile("templates/"+m.Usex.AppName+".panic.log", []byte(fmt.Sprint(time.Now().Format("2006-01-02 15:04:05")+" >> panic occurred:", err)), 0644)
 			rs.Error = "Something wrong"
 			rt = m.ReturnRespone(rs)
 		}
@@ -244,6 +244,7 @@ func (m *myRPC) SaveConfig() models.RequestResult {
 
 	oldlp.CustomHost = lp.CustomHost
 	oldlp.DomainName = lp.DomainName
+	oldlp.FTPHost = lp.FTPHost
 	oldlp.FTPPass = lp.FTPPass
 	oldlp.FTPUser = lp.FTPUser
 	if !m.Rpch.SaveLP(oldlp) {
@@ -323,7 +324,17 @@ func (m *myRPC) Publish() models.RequestResult {
 		//connect ftp
 		var ftpclient *ftp.ServerConn
 		log.Debugf("connecting to %s", lp.FTPHost)
-		ftpclient, err := ftp.Dial(lp.FTPHost + ":21")
+		host := strings.Replace(lp.FTPHost, `http://`, "", -1)
+		host = strings.Replace(host, `https://`, "", -1)
+		host = strings.Replace(host, `ftp://`, "", -1)
+		hostsplit := strings.Split(host, ":")
+		port := "21"
+		if len(hostsplit) > 1 {
+			port = hostsplit[len(hostsplit)-1]
+			host = hostsplit[len(hostsplit)-2]
+		}
+
+		ftpclient, err := ftp.Dial(host + ":" + port)
 
 		if ftpclient == nil {
 			errStr = fmt.Sprintf("Cannot connect to %s" + lp.FTPHost)

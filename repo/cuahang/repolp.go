@@ -65,6 +65,7 @@ func (r *Repo) SaveLP(lp models.LandingPage) bool {
 			"lptemplateid": lp.LPTemplateID,
 			"customhost":   lp.CustomHost,
 			"domainname":   lp.DomainName,
+			"ftphost":      lp.FTPHost,
 			"ftpuser":      lp.FTPUser,
 			"ftppass":      lp.FTPPass,
 		}}
