@@ -41,14 +41,14 @@ type LandingPage struct {
 	LastBuild    time.Time          `bson:"lastbuild"`
 	Modified     time.Time          `bson:"modified"`
 }
-type LP4User struct {
-	ID        primitive.ObjectID `bson:"_id,omitempty"`
-	Path      string             `bson:"path"`
-	Name      string             `bson:"name"`
-	Viewed    int                `bson:"viewed"`
-	Installed int                `bson:"installed"`
-	Designer  string             `bson:"user"`
-	Created   time.Time          `bson:"created"`
+type LPTPL4User struct {
+	ID         primitive.ObjectID `bson:"_id,omitempty"`
+	Name       string             `bson:"name"`
+	Viewed     int                `bson:"viewed"`
+	Installed  int                `bson:"installed"`
+	Designer   string             `bson:"user"`
+	ScreenShot string             `bson:"screenshot"`
+	Created    time.Time          `bson:"created"`
 }
 type Template struct {
 	ID           bson.ObjectId `bson:"_id,omitempty"`

@@ -102,9 +102,9 @@ func (r *Repo) GetAllLpTemplate(userid primitive.ObjectID, isAdmin bool) ([]mode
 	}
 	return rs, nil
 }
-func (r *Repo) GetAllLpForUser() ([]models.LP4User, error) {
+func (r *Repo) GetAllLpTPLForUser() ([]models.LPTPL4User, error) {
 	col := db.Collection("lptemplates")
-	var rs []models.LP4User
+	var rs []models.LPTPL4User
 	cond := bson.M{}
 	cond["status"] = 1
 

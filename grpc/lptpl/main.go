@@ -125,10 +125,7 @@ func (m *myRPC) LoadForUser() models.RequestResult {
 	if ok, _ := m.Usex.Modules["c3m-lptpl-user"]; !ok {
 		return models.RequestResult{Error: "permission denied"}
 	}
-	templates, err := m.Rpch.GetAllLpForUser()
-	for k, _ := range templates {
-		templates[k].Path = `templates/` + templates[k].Path
-	}
+	templates, err := m.Rpch.GetAllLpTPLForUser()
 	if err != nil {
 		return models.RequestResult{Error: err.Error()}
 	}
