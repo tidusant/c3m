@@ -133,13 +133,7 @@ func postHandler(c *gin.Context) {
 	if strrt == "" {
 		strrt = c3mcommon.Fake64()
 	} else {
-		start := time.Now()
-		log.Debugf("DATA len before:%d", len(strrt))
-
 		strrt = mycrypto.Encode(strrt, 8)
-
-		log.Debugf("DATA len after:%d", len(strrt))
-		log.Debugf("encode time:%s", time.Since(start))
 	}
 	c.String(http.StatusOK, strrt)
 }
