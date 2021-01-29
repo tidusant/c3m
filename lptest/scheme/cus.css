@@ -73,6 +73,7 @@
 .btnmodal,.navmodal{
     z-index: 31;
 }
+
 .landingpage-item-content:hover div.landingpage-trash{
     display:block;
 }
