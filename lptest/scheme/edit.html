@@ -144,9 +144,10 @@
             }else{
                 return false
             }
-            //replace trashtitle token for other
-            el.innerHTML=el.innerHTML.replace(new RegExp("\{\{trashtitle\}\}","gm"),"")
+
         }
+        //replace trashtitle token for other
+        el.innerHTML=el.innerHTML.replace(new RegExp("\{\{trashtitle\}\}","gm"),"")
         checkEditable(el)
 
 
