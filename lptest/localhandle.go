@@ -62,7 +62,7 @@ func GetTest(sex, tplname string, c *gin.Context) string {
 	for _, v := range tools {
 		if len(v.Child) > 0 {
 			toolcontent += `
-<div class="cus-not-draggable cursor-pointer hoverable hover:text-white py-2 landingpage-tool-` + v.Name + `">
+<div class="cus-not-draggable cursor-pointer hoverable hover:text-white py-2 ">
                         <div class="landingpage-tool-icon">
                           <img class="m-auto" src="` + v.Icon + `" title="` + v.Title + `" />
                         </div>

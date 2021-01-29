@@ -93,7 +93,7 @@
     const MTools={{mtoolcontent}}
         const navitemtemplate=`{{navitemtemplate}}`
 
-    const drake=dragula([document.querySelector("div.landingpage-pickzone"),...document.querySelectorAll("div.drop-zone"),document.querySelector("div.mega-menu")],{
+    const drake=dragula([document.querySelector("div.landingpage-pickzone"),...document.querySelectorAll("div.drop-zone"),...document.querySelectorAll("div.mega-menu")],{
         copy: function (el, target) {
             return !target.classList.contains("drop-zone")
 
