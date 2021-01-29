@@ -47,9 +47,9 @@
 
             <label for="btnTitle" class="text-gray-700">Title</label>
             <input class="border rounded p-1 form-input mt-1 block w-full" id="modalInputTitle" placeholder="input title" />
-            <label for="btnUrl" class="text-gray-700">Url</label>
+            <label for="btnUrl" class="text-gray-700">Link to</label>
             <input class="border rounded p-1 form-input mt-1 block w-full" id="modalInputUrl" placeholder="input url" />
-            <label for="btnUrl" class="text-gray-700">Inner Text</label>
+            <label for="btnUrl" class="text-gray-700">Html code</label>
             <textarea class="border rounded p-1 form-input mt-1 block w-full" id="modalInputText" placeholder="text"></textarea>
         </div>
         <div class="flex justify-end items-center w-100 border-t p-3">
@@ -112,13 +112,12 @@
     });
 
     drake.on('shadow', (el, target, source) => {
-        console.log(el,target,source)
 
         if(!target||!target.classList.contains("drop-zone"))return
         if(!source||!(source.classList.contains("landingpage-pickzone")||source.classList.contains("mega-menu")))return
-        el.className="m-auto landingpage-cursor-pointer relative gu-transit"
+        el.className="m-auto landingpage-item-content relative gu-transit"
 
-        console.log(el.getAttribute("lp-data-id"))
+
         const content=MTools[el.getAttribute("lp-data-id").replace("landingpage-tool-","")]
 
         el.innerHTML=content
@@ -208,7 +207,9 @@
             }
         }
         if(el.tagName=="BUTTON"){
-            changeButtonOnclickEvent(el)
+            if(el.classList.contains("btnsubmit"))
+                el.onclick=()=>{return false}
+            else changeButtonOnclickEvent(el)
         }
         if(el.childElementCount>0){
             if(el.tagName=="P"){

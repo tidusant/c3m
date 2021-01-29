@@ -54,7 +54,7 @@ func GetTest(sex, tplname string, c *gin.Context) string {
 	mtool := make(map[string]string)
 	toolcontent := ""
 	trashel := `
-<div class="landingpage-trash absolute top-0 hidden bg-opacity-0 z-30" onclick="RemoveItem(this)">
+<div class="landingpage-trash landingpage-cursor-pointer absolute top-0 hidden bg-opacity-0 z-30" onclick="RemoveItem(this)">
 	<div class="bg-black text-white text-xs rounded py-2 px-4 mb-1 right-0 bottom-full">
       Remove item %s {{trashtitle}}     
     </div>
@@ -128,7 +128,7 @@ func GetTest(sex, tplname string, c *gin.Context) string {
 				itemcontent = strings.Replace(itemcontent, `{{trashtitle}}`, "", -1)
 			}
 
-			content = strings.Replace(content, `{{`+v[1]+`}}`, `<div class="item-container m-auto landingpage-cursor-pointer relative" lp-data-id="`+v[1]+`">`+itemcontent+`</div>`, -1)
+			content = strings.Replace(content, `{{`+v[1]+`}}`, `<div class="item-container m-auto landingpage-item-content relative" lp-data-id="`+v[1]+`">`+itemcontent+`</div>`, -1)
 		}
 	}
 
