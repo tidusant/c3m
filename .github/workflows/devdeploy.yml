@@ -99,7 +99,7 @@ jobs:
             
   deploy:
     if: ${{ contains(needs.check.outputs.isdeploy, 'true') }}
-    # The type of runner that the job will run on
+    # The type of runner
     runs-on: self-hosted
     needs: [check,build]
     steps:
