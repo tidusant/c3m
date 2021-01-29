@@ -183,6 +183,7 @@
     }
     function checkEditable(el){
         if(el.classList.contains("element-not-editable"))return
+        if(el.classList.contains("close-modal"))return
         if(el.tagName=="A"){
             el.onclick=(e)=>{
                 e.preventDefault()
