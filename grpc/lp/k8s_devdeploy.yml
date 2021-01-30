@@ -61,10 +61,10 @@ spec:
         - name: c3m-grpc-lp #1st container
           image: tidusant/c3m-grpc-lp:latest #Dockerhub image
           volumeMounts:
-            - mountPath: /app/templates
-              name: lptemplate-volume
-            - mountPath: /app/lp
-              name: lp-volume
+          - mountPath: /app/templates
+            name: lptemplate-volume
+          - mountPath: /app/lp
+            name: lp-volume
           ports:
             - containerPort: 8906 #Exposes the port 8901 of the container
           env:
