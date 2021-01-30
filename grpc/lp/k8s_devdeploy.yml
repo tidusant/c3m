@@ -55,8 +55,8 @@ spec:
           persistentVolumeClaim:
             claimName: c3m-grpc-lptpl-pvc
         - name: lp-volume
-            persistentVolumeClaim:
-              claimName: c3m-lp-pvc
+          persistentVolumeClaim:
+            claimName: c3m-lp-pvc
       containers:
         - name: c3m-grpc-lp #1st container
           image: tidusant/c3m-grpc-lp:latest #Dockerhub image
