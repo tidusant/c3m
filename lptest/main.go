@@ -43,7 +43,7 @@ func main() {
 
 	//fmt.Println(mycrypto.Encode("abc,efc", 5))
 	flag.BoolVar(&debug, "debug", true, "Indicates if debug messages should be printed in log files")
-	flag.StringVar(&rootPath, "rootpath", "", "rewrite for test at local")
+	rootPath = os.Getenv("ROOTPATH")
 	flag.Parse()
 
 	logLevel := log.DebugLevel
