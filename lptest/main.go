@@ -22,11 +22,11 @@ var (
 	loaddatadone bool
 	layoutPath   = "./template/out"
 
-	schemeFolder = "./scheme"
-	rootFolder   = "./templates"
-	rootPath     = "/testtpl"
-	apiserver    string
-	lpminserver  string
+	schemeFolder   = "./scheme"
+	templateFolder = "./templates"
+	rootPath       = "/testtpl"
+	apiserver      string
+	lpminserver    string
 )
 
 func main() {

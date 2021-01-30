@@ -11,7 +11,7 @@ func SubmitTest(sex, tplname string, c *gin.Context) string {
 	content := c.PostForm("data")
 
 	//build content for test
-	buildFolder := rootFolder + "/" + tplname + "/build"
+	buildFolder := templateFolder + "/" + tplname + "/build"
 	os.RemoveAll(buildFolder)
 	err := os.Mkdir(buildFolder, 0775)
 	if err != nil {

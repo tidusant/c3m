@@ -38,7 +38,7 @@ func GetTest(sex, tplname string, c *gin.Context) string {
 
 	}
 	//check template exist
-	tplFolder := rootFolder + "/" + tplname
+	tplFolder := templateFolder + "/" + tplname
 	if _, err := os.Stat(tplFolder); os.IsNotExist(err) {
 		return "Template not found. "
 
@@ -54,7 +54,7 @@ func GetTest(sex, tplname string, c *gin.Context) string {
 	mtool := make(map[string]string)
 	toolcontent := ""
 	trashel := `
-<div class="landingpage-trash landingpage-cursor-pointer absolute top-0 hidden bg-opacity-0 z-30" onclick="RemoveItem(this)">
+<div class="landingpage-trash cursor-pointer absolute top-0 hidden bg-opacity-0 z-30" onclick="RemoveItem(this)">
 	<div class="bg-black text-white text-xs rounded py-2 px-4 mb-1 right-0 bottom-full">
       Remove item %s {{trashtitle}}     
     </div>
@@ -147,12 +147,11 @@ func GetTest(sex, tplname string, c *gin.Context) string {
 	b, _ := json.Marshal(mtool)
 
 	s = strings.Replace(s, "{{mtoolcontent}}", string(b), 1)
-	s = strings.Replace(s, "{{template_path}}", rootPath+"/"+tplname, -1)
 
 	//============================nav item============================
 
 	//read nav item template
-	dat, err = ioutil.ReadFile(rootFolder + "/" + tplname + "/navitem.html")
+	dat, err = ioutil.ReadFile(templateFolder + "/" + tplname + "/navitem.html")
 	if err != nil {
 		return err.Error()
 
@@ -194,7 +193,7 @@ func GetTest(sex, tplname string, c *gin.Context) string {
 	s = strings.Replace(s, "{{customiframejs}}", strings.Replace(customjs, `</script>`, `<\/script>`, -1), -1)
 	s = strings.Replace(s, "{{templatename}}", tplname, -1)
 	s = strings.Replace(s, "{{submiturl}}", mycrypto.EncDat2(sex+"|"+tplname), -1)
-
+	s = strings.Replace(s, "{{templatePath}}", rootPath+"/templates/"+tplname, -1)
 	s = strings.Replace(s, "{{rootPath}}", rootPath, -1)
 	// //Convert your cached html string to byte array
 	// c.Writer.Write([]byte(result))
@@ -205,7 +204,7 @@ func GetTest(sex, tplname string, c *gin.Context) string {
 func ReadTemplateTool(tplname string) ([]Tool, error) {
 	var tools []Tool
 	//read tool item
-	path := rootFolder + "/" + tplname
+	path := templateFolder + "/" + tplname
 	file, err := os.Open(path + "/items.html")
 	if err != nil {
 		return tools, err
