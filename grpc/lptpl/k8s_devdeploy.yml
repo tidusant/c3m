@@ -3,66 +3,6 @@ kind: Namespace
 metadata:
   name: colis-dev
 ---
-kind: PersistentVolume
-apiVersion: v1
-metadata:
-  name: c3m-grpc-lptpl-pv
-  labels:
-    type: local
-  annotations:
-    pv.beta.kubernetes.io/gid: "1001"
-spec:
-  storageClassName: manual
-  capacity:
-    storage: 3Gi
-  accessModes:
-    - ReadWriteOnce
-  hostPath:
-    path: "/data/c3m/lptemplates"
----
-kind: PersistentVolume
-apiVersion: v1
-metadata:
-  name: c3m-cdn-pv
-  labels:
-    type: local
-  annotations:
-    pv.beta.kubernetes.io/gid: "1001"
-spec:
-  storageClassName: manual
-  capacity:
-    storage: 30Gi
-  accessModes:
-    - ReadWriteOnce
-  hostPath:
-    path: "/data/c3m/cdn"
----
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: c3m-grpc-lptpl-pvc
-  namespace: colis-dev
-spec:
-  storageClassName: manual
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 3Gi
----
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: c3m-cdn-pvc
-  namespace: colis-dev
-spec:
-  storageClassName: manual
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 30Gi
----
 kind: Deployment
 apiVersion: apps/v1
 metadata:
@@ -91,6 +31,8 @@ spec:
           ports:
             - containerPort: 8905 #Exposes the port 8901 of the container
           env:
+            - name: CDNURL
+              value: "http://c3m.site/cdn/"
             - name: CHADMIN_URI
               valueFrom:
                 secretKeyRef:
@@ -104,10 +46,10 @@ spec:
       volumes:
       - name: template-volume
         persistentVolumeClaim:
-          claimName: c3m-grpc-lptpl-pvc
+          claimName: c3mdev-lptpl-pvc
       - name: cdn-volume
         persistentVolumeClaim:
-          claimName: c3m-cdn-pvc
+          claimName: c3mdev-cdn-pvc
 ---
 kind: Service
 apiVersion: v1

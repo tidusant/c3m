@@ -6,12 +6,14 @@ import (
 	"encoding/base64"
 	"github.com/tidusant/c3m/common/c3mcommon"
 	"github.com/tidusant/c3m/common/mycrypto"
+	"github.com/tidusant/c3m/common/mystring"
 	maingrpc "github.com/tidusant/c3m/grpc"
 	pb "github.com/tidusant/c3m/grpc/protoc"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"image"
 	"io/ioutil"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -35,7 +37,11 @@ import (
 const (
 	name           string = "lptpl"
 	ver            string = "1"
-	templateFolder        = "templates"
+	templateFolder        = "./templates"
+)
+
+var (
+	cdnURL = os.Getenv("CDNURL")
 )
 
 type service struct {
@@ -54,7 +60,7 @@ func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (rt *pb.RPCRespon
 	err = nil
 	defer func() {
 		if err := recover(); err != nil {
-			ioutil.WriteFile("templates/"+m.Usex.AppName+".panic.log", []byte(fmt.Sprint(time.Now().Format("2006-01-02 15:04:05")+" >> panic occurred:", err)), 0644)
+			ioutil.WriteFile("templates/"+name+".panic.log", []byte(fmt.Sprint(time.Now().Format("2006-01-02 15:04:05")+" >> panic occurred:", err)), 0644)
 			rs.Error = "Something wrong"
 			rt = m.ReturnRespone(rs)
 		}
@@ -150,7 +156,7 @@ func (m *myRPC) Submit(resubmit bool) models.RequestResult {
 	}
 	args := strings.Split(m.Usex.Params, ",")
 	if len(args) < 2 {
-		return models.RequestResult{Error: "something wrong"}
+		return models.RequestResult{Error: "invalid params"}
 	}
 	tplname := args[0]
 	b64str := args[1]
@@ -215,7 +221,7 @@ func (m *myRPC) Reject() models.RequestResult {
 	tplID, err := primitive.ObjectIDFromHex(m.Usex.Params)
 
 	if err != nil {
-		return models.RequestResult{Error: "something wrong"}
+		return models.RequestResult{Error: "template not found"}
 	}
 	oldtpl, err := m.Rpch.GetLpTemplateById(tplID)
 	if err != nil {
@@ -235,13 +241,14 @@ func (m *myRPC) Reject() models.RequestResult {
 	return models.RequestResult{Status: 1, Data: ""}
 }
 func (m *myRPC) Approve() models.RequestResult {
+
 	if ok, _ := m.Usex.Modules["c3m-lptpl-admin"]; !ok {
 		return models.RequestResult{Error: "permission denied"}
 	}
 	tplID, err := primitive.ObjectIDFromHex(m.Usex.Params)
 
 	if err != nil {
-		return models.RequestResult{Error: "something wrong"}
+		return models.RequestResult{Error: "template not found"}
 	}
 	oldtpl, err := m.Rpch.GetLpTemplateById(tplID)
 	if err != nil {
@@ -249,7 +256,7 @@ func (m *myRPC) Approve() models.RequestResult {
 	}
 
 	if oldtpl.Status != 2 {
-		return models.RequestResult{Error: "something wrong"}
+		return models.RequestResult{Error: "template not in review status"}
 	}
 
 	//=======================zip file
@@ -322,34 +329,73 @@ func (m *myRPC) Approve() models.RequestResult {
 
 	//======publish screen shot
 	tmplFolder := templateFolder + `/` + oldtpl.Path
-	imgfolder := "./cdn/lptemplate"
-	os.MkdirAll(imgfolder, 0777)
+	lsCDNImages := []string{}
+	cdnfolder := "./cdn/lptemplate"
+	os.MkdirAll(cdnfolder, 0755)
 	filename := mycrypto.StringRand(5) + mycrypto.StringRand(5) + mycrypto.StringRand(5) + ".jpg"
 
 	//read file
 	file, err := os.Open(tmplFolder + "/screenshot.jpg")
 	if err != nil {
+		file.Close()
 		return models.RequestResult{Error: "error reading screenshot"}
 	}
 	imageconfig, _, _ := image.DecodeConfig(file)
+	file.Close()
 	fileb, err := ioutil.ReadFile(tmplFolder + "/screenshot.jpg")
 	if err != nil {
 		return models.RequestResult{Error: "error reading screenshot"}
 	}
 	//copy file
-	err = ioutil.WriteFile(imgfolder+"/"+filename, fileb, 0777)
+	err = ioutil.WriteFile(cdnfolder+"/"+filename, fileb, 0644)
 	if err != nil {
 		return models.RequestResult{Error: "error creating screenshot"}
 	}
+	lsCDNImages = append(lsCDNImages, filename)
 	//create thumb
 	thumbwidth := 200
 	if imageconfig.Width > thumbwidth {
 		fileb, _ = c3mcommon.ImgResize(fileb, uint(thumbwidth), 0)
-		err = ioutil.WriteFile(imgfolder+"/thumb_"+filename, fileb, 0777)
+		err = ioutil.WriteFile(cdnfolder+"/thumb_"+filename, fileb, 0644)
 		if err != nil {
+			m.removeCDNImages(lsCDNImages)
 			return models.RequestResult{Error: "error creating thumb screenshot"}
 		}
 	}
+	lsCDNImages = append(lsCDNImages, "thumb_"+filename)
+
+	//copy all image into cdn
+	files, _ := ioutil.ReadDir(tmplFolder)
+	for _, f := range files {
+		if !f.IsDir() {
+			fname := f.Name()
+			if fname == "content.html" || fname == "items.html" || fname == "navitem.html" {
+				images, errstr := m.replaceCDNImages(tmplFolder+"/"+fname, cdnfolder, `<img.*src="(.*?)".*>`, `{{templatePath}}`, tmplFolder)
+				lsCDNImages = append(lsCDNImages, images...)
+				if errstr != "" {
+					m.removeCDNImages(lsCDNImages)
+					return models.RequestResult{Error: errstr}
+				}
+			}
+		}
+	}
+
+	files, _ = ioutil.ReadDir(tmplFolder + "/css")
+	for _, f := range files {
+		if !f.IsDir() {
+			fname := f.Name()
+			if filepath.Ext(fname) == ".css" {
+				images, errstr := m.replaceCDNImages(tmplFolder+"/css/"+fname, cdnfolder, `url\(["']?(.*?)["']?\)`, `../`, tmplFolder+`/`)
+				lsCDNImages = append(lsCDNImages, images...)
+				if errstr != "" {
+					m.removeCDNImages(lsCDNImages)
+					return models.RequestResult{Error: errstr}
+				}
+			}
+		}
+	}
+
+	log.Debugf("lsCDNImages:%+v", lsCDNImages)
 
 	//=======================
 	//update database
@@ -363,6 +409,61 @@ func (m *myRPC) Approve() models.RequestResult {
 	return models.RequestResult{Status: 1, Data: ""}
 }
 
+func (m *myRPC) replaceCDNImages(filepath, cdnfolder, regex, oldstr, newstr string) (images []string, errstr string) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Debugf("replaceCDNImages panic: %s", err)
+		}
+	}()
+	errstr = ""
+	images = []string{}
+	htmlContent := ""
+	cdnImageURL := cdnURL + "lptemplate/"
+	tplContent, err := ioutil.ReadFile(filepath)
+	if err != nil {
+		return images, "error reading html content"
+	}
+	htmlContent = string(tplContent)
+	//find, create and replace image in html
+	var reg = regexp.MustCompile(regex)
+	t := reg.FindAllStringSubmatch(htmlContent, -1)
+	for _, v := range t {
+		if strings.Index(v[1], "http://") == 0 || strings.Index(v[1], "https://") == 0 {
+			continue
+		}
+		imagePath := strings.Replace(v[1], oldstr, newstr, 1)
+		log.Debugf("imagePath %s - %s - %s", imagePath, filepath, v[0])
+		if strings.Index(imagePath, "data:image/") > -1 {
+			continue
+		}
+		fileext := imagePath[strings.LastIndex(imagePath, "."):]
+		fileb, err := ioutil.ReadFile(imagePath)
+		if err != nil {
+			return images, "error reading image " + imagePath
+		}
+		//write image
+		filename := mystring.RandString(5) + mystring.RandString(5) + mystring.RandString(5) + fileext
+		err = ioutil.WriteFile(cdnfolder+"/"+filename, fileb, 0644)
+		if err != nil {
+			return images, "error creating image " + imagePath
+		}
+		images = append(images, filename)
+		htmlContent = strings.Replace(htmlContent, v[1], cdnImageURL+filename, 1)
+	}
+	//write to html file
+	err = ioutil.WriteFile(filepath, []byte(htmlContent), 0644)
+	if err != nil {
+		return images, "error update html file " + filepath
+	}
+	return
+}
+
+func (m *myRPC) removeCDNImages(images []string) {
+	cdnfolder := "./cdn/lptemplate"
+	for _, v := range images {
+		os.Remove(cdnfolder + "/" + v)
+	}
+}
 func (m *myRPC) LoadTemplate() models.RequestResult {
 	if ok, _ := m.Usex.Modules["c3m-lptpl-user"]; !ok {
 		return models.RequestResult{Error: "permission denied"}
@@ -370,14 +471,14 @@ func (m *myRPC) LoadTemplate() models.RequestResult {
 	tplID, err := primitive.ObjectIDFromHex(m.Usex.Params)
 
 	if err != nil {
-		return models.RequestResult{Error: "something wrong"}
+		return models.RequestResult{Error: "template not found"}
 	}
 	tpl, err := m.Rpch.GetLpTemplateById(tplID)
 	if err != nil {
 		return models.RequestResult{Error: err.Error()}
 	}
 	if tpl.Status != 1 {
-		return models.RequestResult{Error: "something wrong"}
+		return models.RequestResult{Error: "template not found"}
 	}
 
 	mfile := make(map[string][]byte)
