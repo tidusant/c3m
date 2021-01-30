@@ -23,7 +23,7 @@ spec:
       volumes:
         - name: template-volume
           persistentVolumeClaim:
-            claimName: c3m-grpc-lptpl-pvc
+            claimName: c3mdev-lptpl-pvc
       containers:
         - name: c3m-lptest #1st container
           image: tidusant/c3m-lptest:latest #Dockerhub image
