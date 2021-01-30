@@ -64,7 +64,7 @@ spec:
             - mountPath: /app/templates
               name: lptemplate-volume
             - mountPath: /app/lp
-                name: lp-volume
+              name: lp-volume
           ports:
             - containerPort: 8906 #Exposes the port 8901 of the container
           env:
