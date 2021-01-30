@@ -299,7 +299,7 @@ func (m *myRPC) Publish() models.RequestResult {
 
 	publishFolder := "./templates/" + lppath
 	os.RemoveAll(publishFolder)
-	err := os.MkdirAll(publishFolder, 0775)
+	err := os.MkdirAll(publishFolder, 0755)
 	if err != nil {
 		return models.RequestResult{Error: err.Error()}
 	}
@@ -383,7 +383,7 @@ func (m *myRPC) Publish() models.RequestResult {
 		//using .c3m.site domain
 		log.Debugf("using c3m site")
 		lpPath := "./lp/" + lp.DomainName
-		os.MkdirAll(lpPath, 0775)
+		os.MkdirAll(lpPath, 0755)
 		fileb, err := ioutil.ReadFile(publishFolder + "/index.html")
 		if err != nil {
 			return models.RequestResult{Error: "error reading index.html"}

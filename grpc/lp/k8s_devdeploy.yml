@@ -3,36 +3,6 @@ kind: Namespace
 metadata:
   name: colis-dev
 ---
-kind: PersistentVolume
-apiVersion: v1
-metadata:
-  name: c3m-lp-pv
-  labels:
-    type: local
-  annotations:
-    pv.beta.kubernetes.io/gid: "1001"
-spec:
-  storageClassName: manual
-  capacity:
-    storage: 3Gi
-  accessModes:
-    - ReadWriteOnce
-  hostPath:
-    path: "/data/c3m/lp"
----
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: c3m-lp-pvc
-  namespace: colis-dev
-spec:
-  storageClassName: manual
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 3Gi
----
 kind: Deployment
 apiVersion: apps/v1
 metadata:
@@ -53,10 +23,10 @@ spec:
       volumes:
         - name: lptemplate-volume
           persistentVolumeClaim:
-            claimName: c3m-grpc-lptpl-pvc
+            claimName: c3mdev-lptpl-pvc
         - name: lp-volume
           persistentVolumeClaim:
-            claimName: c3m-lp-pvc
+            claimName: c3mdev-lp-pvc
       containers:
         - name: c3m-grpc-lp #1st container
           image: tidusant/c3m-grpc-lp:latest #Dockerhub image

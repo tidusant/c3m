@@ -52,8 +52,4 @@ https://kubernetes.io/docs/tasks/administer-cluster/dns-debugging-resolution/
 ### status of service is "terminating" (cannot delete)
 You can get rid of this issue by manually editing the pv and then removing the finalizers which looked something like this:
 
-- kubernetes.io/pv-protection
-e.g
-kubectl patch pvc pvc_name -p '{"metadata":{"finalizers":null}}'
-kubectl patch pv pv_name -p '{"metadata":{"finalizers":null}}'
-kubectl patch pod pod_name -p '{"metadata":{"finalizers":null}}'
+kubectl get pv | tail -n+2 | awk '{print $1}' | xargs -I{} kubectl patch pv {} -p '{"metadata":{"finalizers": null}}'
