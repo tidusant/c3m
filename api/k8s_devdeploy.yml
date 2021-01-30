@@ -3,6 +3,96 @@ kind: Namespace
 metadata:
   name: colis-dev
 ---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: c3mdev-lptpl-pv
+  labels:
+    type: local
+  annotations:
+    pv.beta.kubernetes.io/gid: "1001"
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 3Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/data/c3mdev/lptemplates"
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: c3mdev-cdn-pv
+  labels:
+    type: local
+  annotations:
+    pv.beta.kubernetes.io/gid: "1001"
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 30Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/data/c3mdev/cdn"
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: c3mdev-lp-pv
+  labels:
+    type: local
+  annotations:
+    pv.beta.kubernetes.io/gid: "1001"
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 3Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/data/c3mdev/lp"
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: c3mdev-lptpl-pvc
+  namespace: colis-dev
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 3Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: c3mdev-cdn-pvc
+  namespace: colis-dev
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 30Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: c3mdev-lp-pvc
+  namespace: colis-dev
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 3Gi
+---
 kind: Deployment
 apiVersion: apps/v1
 metadata:
