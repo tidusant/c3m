@@ -28,8 +28,8 @@ spec:
           persistentVolumeClaim:
             claimName: c3mdev-lp-pvc
       containers:
-        - name: c3m-grpc-lp #1st container
-          image: tidusant/c3m-grpc-lp:latest #Dockerhub image
+        - name: c3m-grpc-lp
+          image: tidusant/c3m-grpc-lp:latest
           volumeMounts:
           - mountPath: /app/templates
             name: lptemplate-volume
