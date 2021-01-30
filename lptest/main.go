@@ -24,7 +24,7 @@ var (
 
 	schemeFolder   = "./scheme"
 	templateFolder = "./templates"
-	rootPath       = "/testtpl"
+	rootPath       = ""
 	apiserver      string
 	lpminserver    string
 )
@@ -37,14 +37,13 @@ func main() {
 	}
 	var port int
 	var debug bool
-	var localrewrite = ""
 	//check port
 	rand.Seed(time.Now().Unix())
 	port = 8082
 
 	//fmt.Println(mycrypto.Encode("abc,efc", 5))
 	flag.BoolVar(&debug, "debug", true, "Indicates if debug messages should be printed in log files")
-	flag.StringVar(&localrewrite, "localrewrite", "", "rewrite for test at local")
+	flag.StringVar(&rootPath, "rootpath", "", "rewrite for test at local")
 	flag.Parse()
 
 	logLevel := log.DebugLevel
@@ -64,8 +63,8 @@ func main() {
 	//router.Use(static.Serve("/", static.LocalFile("static", false)))
 	router.StaticFile("/", layoutPath+"/index.html")
 	//nextjs request File
-	router.Static(localrewrite+"/templates", "./templates")
-	router.Static(localrewrite+"/scheme", "./scheme")
+	router.Static("/templates", "./templates")
+	router.Static("/scheme", "./scheme")
 	//router.StaticFile("/edit", layoutPath+"/edit.html")
 	//router.LoadHTMLGlob(layoutPath+"/edit.html")
 
