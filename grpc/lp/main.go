@@ -381,7 +381,8 @@ func (m *myRPC) Publish() models.RequestResult {
 		ftpclient.Quit()
 	} else {
 		//using .c3m.site domain
-		lpPath := "/lp/" + lp.DomainName
+		log.Debugf("using c3m site")
+		lpPath := "./lp/" + lp.DomainName
 		os.MkdirAll(lpPath, 0775)
 		fileb, err := ioutil.ReadFile(publishFolder + "/index.html")
 		if err != nil {
@@ -397,7 +398,7 @@ func (m *myRPC) Publish() models.RequestResult {
 			return models.RequestResult{Error: "error reading style.css"}
 		}
 		//copy file
-		err = ioutil.WriteFile(lpPath+"/index.html", fileb, 0644)
+		err = ioutil.WriteFile(lpPath+"/style.css", fileb, 0644)
 		if err != nil {
 			return models.RequestResult{Error: "error creating style.css"}
 		}
