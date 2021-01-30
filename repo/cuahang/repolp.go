@@ -9,6 +9,16 @@ import (
 	"time"
 )
 
+func (r *Repo) LPCheckDomainUrlExist(domainUrl string) bool {
+	start := time.Now()
+	col := db.Collection("landingpages")
+	var rs models.LandingPage
+	err := col.FindOne(ctx, bson.M{"customhost": true, "domainname": domainUrl}).Decode(&rs)
+	c3mcommon.CheckError("LPCheckDomainUrlExist", err)
+	r.QueryCount++
+	r.QueryTime += time.Since(start)
+	return !rs.ID.IsZero()
+}
 func (r *Repo) GetLPByCampID(campID string, userID primitive.ObjectID) models.LandingPage {
 	start := time.Now()
 	col := db.Collection("landingpages")

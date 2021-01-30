@@ -50,7 +50,7 @@ func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (rt *pb.RPCRespon
 	err = nil
 	defer func() {
 		if err := recover(); err != nil {
-			ioutil.WriteFile("templates/"+m.Usex.AppName+".panic.log", []byte(fmt.Sprint(time.Now().Format("2006-01-02 15:04:05")+" >> panic occurred:", err)), 0644)
+			ioutil.WriteFile("templates/"+name+".panic.log", []byte(fmt.Sprint(time.Now().Format("2006-01-02 15:04:05")+" >> panic occurred:", err)), 0644)
 			rs.Error = "Something wrong"
 			rt = m.ReturnRespone(rs)
 		}
@@ -240,6 +240,12 @@ func (m *myRPC) SaveConfig() models.RequestResult {
 		if strings.Trim(lp.FTPPass, " ") == "" {
 			return models.RequestResult{Error: "FTPPass is empty"}
 		}
+
+		//check duplicate url
+		if m.Rpch.LPCheckDomainUrlExist(lp.DomainName) {
+			return models.RequestResult{Error: "URL is exist. Please choose another one."}
+		}
+
 	}
 
 	oldlp.CustomHost = lp.CustomHost
@@ -335,13 +341,14 @@ func (m *myRPC) Publish() models.RequestResult {
 		}
 
 		ftpclient, err := ftp.Dial(host + ":" + port)
-
+		if err != nil {
+			return models.RequestResult{Error: err.Error()}
+		}
 		if ftpclient == nil {
 			errStr = fmt.Sprintf("Cannot connect to %s" + lp.FTPHost)
 		}
-		if err == nil {
-			err = ftpclient.Login(lp.FTPUser, lp.FTPPass)
-		}
+
+		err = ftpclient.Login(lp.FTPUser, lp.FTPPass)
 
 		// perform copy
 		if err == nil {
@@ -374,7 +381,26 @@ func (m *myRPC) Publish() models.RequestResult {
 		ftpclient.Quit()
 	} else {
 		//using .c3m.site domain
-		log.Debugf("using .c3m.site domain")
+		lpPath := "/lp/" + lp.DomainName
+		os.MkdirAll(lpPath, 0775)
+		fileb, err := ioutil.ReadFile(publishFolder + "/index.html")
+		if err != nil {
+			return models.RequestResult{Error: "error reading index.html"}
+		}
+		//copy file
+		err = ioutil.WriteFile(lpPath+"/index.html", fileb, 0644)
+		if err != nil {
+			return models.RequestResult{Error: "error creating index.html"}
+		}
+		fileb, err = ioutil.ReadFile(publishFolder + "/style.css")
+		if err != nil {
+			return models.RequestResult{Error: "error reading style.css"}
+		}
+		//copy file
+		err = ioutil.WriteFile(lpPath+"/index.html", fileb, 0644)
+		if err != nil {
+			return models.RequestResult{Error: "error creating style.css"}
+		}
 	}
 
 	if errStr != "" {
