@@ -33,6 +33,8 @@ spec:
           ports:
             - containerPort: 8082 #Exposes the port 8901 of the container
           env:
+            - name: ROOTPATH
+              value: "/testtpl"
             - name: API_ADD
               value: "http://c3m-api-service:8081"
             - name: LPMIN_ADD
