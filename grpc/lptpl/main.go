@@ -180,12 +180,12 @@ func (m *myRPC) Submit(resubmit bool) models.RequestResult {
 	mfile := make(map[string][]byte)
 	json.Unmarshal(s, &mfile)
 	tplpath := mycrypto.EncodeA(tplname + "_" + m.Usex.Username + mycrypto.StringRand(2))
-	os.Mkdir(templateFolder+"/"+tplpath, 0775)
+	os.Mkdir(templateFolder+"/"+tplpath, 0755)
 	for k, v := range mfile {
 		//check file folder
 		if strings.Index(k, "/") > 0 {
 			fpath := k[0:strings.LastIndex(k, "/")]
-			os.MkdirAll(templateFolder+"/"+tplpath+"/"+fpath, 0775)
+			os.MkdirAll(templateFolder+"/"+tplpath+"/"+fpath, 0755)
 		}
 		err := ioutil.WriteFile(templateFolder+"/"+tplpath+"/"+k, v, 0644)
 		if err != nil {
@@ -483,10 +483,15 @@ func (m *myRPC) LoadTemplate() models.RequestResult {
 
 	mfile := make(map[string][]byte)
 	tmplFolder := templateFolder + `/` + tpl.Path
+	//check folder exist
+	if _, err := os.Stat(tmplFolder); os.IsNotExist(err) {
+		return models.RequestResult{Error: "template directory not found"}
+	}
 	walker := func(path string, info os.FileInfo, err error) error {
 		//skip folder images
-
-		if path == tmplFolder+"/content.html" || path == tmplFolder+"/items.html" || path == tmplFolder+"/navitem.html" || strings.Index(path, tmplFolder+"/css") == 0 || strings.Index(path, tmplFolder+"/js") == 0 || strings.Index(path, tmplFolder+"/itemicons") == 0 {
+		filename := path[strings.LastIndex(path, "/"):]
+		readPath := "templates/" + tpl.Path
+		if filename == readPath+"/content.html" || path == readPath+"/items.html" || path == readPath+"/navitem.html" || strings.Index(path, readPath+"/css") == 0 || strings.Index(path, readPath+"/js") == 0 || strings.Index(path, readPath+"/itemicons") == 0 {
 			if err != nil {
 				return err
 			}
