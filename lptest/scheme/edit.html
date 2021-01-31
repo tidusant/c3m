@@ -246,6 +246,10 @@
     }
     function SubmitTest(){
         document.querySelector("#preloader").classList.remove("hidden")
+        //remove all landingpage-trash
+        document.querySelectorAll(".landingpage-trash").forEach(item=>{
+            item.remove();
+        })
         $.post('{{rootPath}}/test/submit/{{submiturl}}',{"data":document.querySelector("div[lp-data-id=landingpage-content]").innerHTML}).done((rs)=>{
             console.log(rs)
             try{
