@@ -121,6 +121,9 @@ func (m *myRPC) Save() models.RequestResult {
 		if lp.LPTemplateID != tplID {
 			publishFolder := "./templates/" + mycrypto.Decode4(lp.Path)
 			os.RemoveAll(publishFolder)
+			//create new path
+			lp.Path = mycrypto.StringRand(5) + mycrypto.StringRand(5)
+			lp.Path = mycrypto.Encode4(tpl.Path + "/publish/" + lp.Path)
 		}
 	}
 	lp.Modified = time.Now()
@@ -291,7 +294,7 @@ func (m *myRPC) Publish() models.RequestResult {
 	}
 
 	//build content for publish
-	lppath := mycrypto.Decode4(lp.Path)
+	lppath := mycrypto.Decode4(lp.Path) //landingpage path: templates/xxx/
 	argspath := strings.Split(lppath, "/")
 	if len(argspath) < 3 {
 		return models.RequestResult{Error: "landing page path invalid"}
