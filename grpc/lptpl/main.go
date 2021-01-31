@@ -489,9 +489,8 @@ func (m *myRPC) LoadTemplate() models.RequestResult {
 	}
 	walker := func(path string, info os.FileInfo, err error) error {
 		//skip folder images
-		filename := path[strings.LastIndex(path, "/"):]
 		readPath := "templates/" + tpl.Path
-		if filename == readPath+"/content.html" || path == readPath+"/items.html" || path == readPath+"/navitem.html" || strings.Index(path, readPath+"/css") == 0 || strings.Index(path, readPath+"/js") == 0 || strings.Index(path, readPath+"/itemicons") == 0 {
+		if path == readPath+"/content.html" || path == readPath+"/items.html" || path == readPath+"/navitem.html" || strings.Index(path, readPath+"/css") == 0 || strings.Index(path, readPath+"/js") == 0 || strings.Index(path, readPath+"/itemicons") == 0 {
 			if err != nil {
 				return err
 			}
