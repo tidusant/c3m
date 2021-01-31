@@ -13,7 +13,7 @@ func SubmitTest(sex, tplname string, c *gin.Context) string {
 	//build content for test
 	buildFolder := templateFolder + "/" + tplname
 	os.RemoveAll(buildFolder + "/build")
-	err := os.Mkdir(buildFolder, 0775)
+	err := os.Mkdir(buildFolder+"/build", 0775)
 	if err != nil {
 		return err.Error()
 	}
