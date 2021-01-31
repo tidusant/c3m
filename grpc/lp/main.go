@@ -250,7 +250,7 @@ func (m *myRPC) SaveConfig() models.RequestResult {
 		}
 
 	}
-
+	oldlp.Favicon = lp.Favicon
 	oldlp.CustomHost = lp.CustomHost
 	oldlp.DomainName = lp.DomainName
 	oldlp.FTPHost = lp.FTPHost

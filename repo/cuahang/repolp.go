@@ -70,6 +70,7 @@ func (r *Repo) SaveLP(lp models.LandingPage) bool {
 		filter := bson.M{"campaignid": lp.CampaignID, "orgid": lp.OrgID}
 		update := bson.M{"$set": bson.M{
 			"path":         lp.Path,
+			"favicon":      lp.Favicon,
 			"content":      lp.Content,
 			"sfuserid":     lp.SFUserID,
 			"modified":     lp.Modified,
