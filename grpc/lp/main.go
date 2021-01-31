@@ -318,7 +318,7 @@ func (m *myRPC) Publish() models.RequestResult {
 	}
 	//call service publish
 
-	bodystr := c3mcommon.RequestAPI2(LPminserver+"/publish", argspath[0], m.Usex.Session+","+argspath[2])
+	bodystr := c3mcommon.RequestAPI2(LPminserver+"/publish", argspath[0], m.Usex.Session+","+argspath[2]+","+mycrypto.Base64Encode(lp.Favicon))
 	log.Debugf("bodystr rt:%s", bodystr)
 	var rs models.RequestResult
 	err = json.Unmarshal([]byte(bodystr), &rs)

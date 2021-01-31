@@ -47,6 +47,9 @@ func MD5(text string) string {
 }
 
 func Base64Encode(s string) string {
+	if strings.Trim(s, " ") == "" {
+		return s
+	}
 	return base64.StdEncoding.EncodeToString([]byte(s))
 }
 func Base64Decode(s string) string {
