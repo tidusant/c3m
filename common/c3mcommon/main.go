@@ -573,19 +573,6 @@ func InArray(v interface{}, in interface{}) (ok bool, i int) {
 	}
 	return
 }
-func RemoveArrayElement(slice []interface{}, elem interface{}) []interface{} {
-	if len(slice) == 0 {
-		return slice
-	}
-	for i, v := range slice {
-		if v == elem {
-			slice = append(slice[:i], slice[i+1:]...)
-			return RemoveArrayElement(slice, elem)
-			break
-		}
-	}
-	return slice
-}
 
 func ImgResize(imagebytes []byte, w, h uint) ([]byte, string) {
 	filetype := http.DetectContentType(imagebytes[:512])
@@ -880,41 +867,12 @@ func CopyDir(source string, dest string) (err error) {
 	return
 }
 
-func JS1Line(content string) string {
-	content = strings.Replace(content, "\r\n", "", -1)
-	content = strings.Replace(content, "\n", "", -1)
-	content = strings.Replace(content, "\r", "", -1)
-	return content
-}
-func JSMinify(content string) string {
-	data := "code=" + viper.GetString("config.minifyKey")
-	data += "&text=" + url.QueryEscape(content)
-
-	rtstr, _ := RequestUrl(viper.GetString("config.minify"), "POST", data)
-	return rtstr
-}
-
-//commpress using lzstring from nodejs
-func Base64Compress(content string) string {
-	data := "code=" + viper.GetString("config.minifyKey")
-	data += "&text=" + url.QueryEscape(content)
-	rtstr, _ := RequestUrl(viper.GetString("config.compress"), "POST", data)
-	return rtstr
-}
-func MinifyCompress(content string) string {
-	data := "code=" + viper.GetString("config.minifyKey")
-	data += "&text=" + url.QueryEscape(content)
-
-	rtstr, _ := RequestUrl(viper.GetString("config.minifycompress"), "POST", data)
-	return rtstr
-}
+//request to c3m api
 func RequestAPI(address, query, data string) string {
 	data = "data=" + mycrypto.EncDat2(data)
-
 	if address[len(address)-1:len(address)] != "/" {
 		address += "/"
 	}
-
 	rtstr, resp := RequestUrl(address+mycrypto.EncDat2(query), "POST", data)
 	rs := RequestResult{Status: 0}
 	if resp == nil || resp.StatusCode != 200 {
@@ -952,32 +910,8 @@ func RequestAPI2(address, query, data string) string {
 	b, _ := json.Marshal(rs)
 	return string(b)
 }
-func RequestBuildService(uri, method, data string) string {
 
-	data = "data=" + mycrypto.EncDat2(data)
-	rtstr, resp := RequestUrl(viper.GetString("config.buildserver")+mycrypto.EncodeBK(uri, "name"), method, data)
-	var rs RequestResult
-	if resp == nil || resp.StatusCode != 200 {
-		rs.Status = 0
-		rs.Error = "Request service error. Please contact your administrator."
-		b, _ := json.Marshal(rs)
-		return string(b)
-	}
-	rtstr = mycrypto.DecodeLight1(rtstr, 5)
-
-	json.Unmarshal([]byte(rtstr), &rs)
-
-	if rs.Status == 0 {
-		rs.Error = "Service Response error. Please contact your administrator."
-	}
-	b, _ := json.Marshal(rs)
-	return string(b)
-}
-func RequestBuildServiceAsync(uri, method, data string) {
-	go func(uri, method, data string) {
-		RequestBuildService(uri, method, data)
-	}(uri, method, data)
-}
+//request to external URL
 func RequestUrl(urlrequest, method, data string) (string, *http.Response) {
 	var req *http.Request
 	var err error
@@ -1011,6 +945,8 @@ func RequestUrl(urlrequest, method, data string) (string, *http.Response) {
 	CheckError("request read data", err)
 	return bodystr, resp
 }
+
+//request external url, using post form
 func RequestUrl2(urlrequest, method string, data url.Values) string {
 	var rsp *http.Response
 	var err error
@@ -1098,33 +1034,6 @@ func FileUploadRequest(uri string, params map[string]string, paramName, path str
 	// 	rt = string(bodyContent)
 	// }
 	return rt
-}
-
-func RequestService2(serviceurl string, data url.Values) string {
-	payloadBytes, err := json.Marshal(data)
-	body := bytes.NewReader(payloadBytes)
-	req, err := http.NewRequest("POST", serviceurl, body)
-	if !CheckError("request api", err) {
-		return ""
-	}
-	//req.Header.Set("Content-Type", "application/json")
-	resp, err := http.DefaultClient.Do(req)
-	if !CheckError("request api", err) {
-		return ""
-	}
-
-	defer resp.Body.Close()
-
-	bodyresp, _ := ioutil.ReadAll(resp.Body)
-	bodystr := string(bodyresp)
-
-	if bodystr == "" {
-		return ""
-	}
-
-	bodystr = mycrypto.Decode4(bodystr)
-	// log.Debugf("response decode:%s", bodystr)
-	return bodystr
 }
 
 func RemoveHTMLComments(content []byte) []byte {
@@ -1297,203 +1206,4 @@ func CreateImageFileOld(path, b64content string) error {
 
 	}
 	return nil
-}
-
-const (
-	encodePath encoding = 1 + iota
-	encodeHost
-	encodeUserPassword
-	encodeQueryComponent
-	encodeFragment
-)
-
-type encoding int
-type EscapeError string
-
-func (e EscapeError) Error() string {
-	return "invalid URL escape " + strconv.Quote(string(e))
-}
-
-func ishex(c byte) bool {
-	switch {
-	case '0' <= c && c <= '9':
-		return true
-	case 'a' <= c && c <= 'f':
-		return true
-	case 'A' <= c && c <= 'F':
-		return true
-	}
-	return false
-}
-
-func unhex(c byte) byte {
-	switch {
-	case '0' <= c && c <= '9':
-		return c - '0'
-	case 'a' <= c && c <= 'f':
-		return c - 'a' + 10
-	case 'A' <= c && c <= 'F':
-		return c - 'A' + 10
-	}
-	return 0
-}
-
-// Return true if the specified character should be escaped when
-// appearing in a URL string, according to RFC 3986.
-//
-// Please be informed that for now shouldEscape does not check all
-// reserved characters correctly. See golang.org/issue/5684.
-func shouldEscape(c byte, mode encoding) bool {
-	// §2.3 Unreserved characters (alphanum)
-	if 'A' <= c && c <= 'Z' || 'a' <= c && c <= 'z' || '0' <= c && c <= '9' {
-		return false
-	}
-
-	if mode == encodeHost {
-		// §3.2.2 Host allows
-		//  sub-delims = "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / ";" / "="
-		// as part of reg-name.
-		// We add : because we include :port as part of host.
-		// We add [ ] because we include [ipv6]:port as part of host
-		switch c {
-		case '!', '$', '&', '\'', '(', ')', '*', '+', ',', ';', '=', ':', '[', ']':
-			return false
-		}
-	}
-
-	switch c {
-	case '-', '_', '.', '~': // §2.3 Unreserved characters (mark)
-		return false
-
-	case '$', '&', '+', ',', '/', ':', ';', '=', '?', '@': // §2.2 Reserved characters (reserved)
-		// Different sections of the URL allow a few of
-		// the reserved characters to appear unescaped.
-		switch mode {
-		case encodePath: // §3.3
-			// The RFC allows : @ & = + $ but saves / ; , for assigning
-			// meaning to individual path segments. This package
-			// only manipulates the path as a whole, so we allow those
-			// last two as well. That leaves only ? to escape.
-			return c == '?'
-
-		case encodeUserPassword: // §3.2.1
-			// The RFC allows ';', ':', '&', '=', '+', '$', and ',' in
-			// userinfo, so we must escape only '@', '/', and '?'.
-			// The parsing of userinfo treats ':' as special so we must escape
-			// that too.
-			return c == '@' || c == '/' || c == '?' || c == ':'
-
-		case encodeQueryComponent: // §3.4
-			// The RFC reserves (so we must escape) everything.
-			return true
-
-		case encodeFragment: // §4.1
-			// The RFC text is silent but the grammar allows
-			// everything, so escape nothing.
-			return false
-		}
-	}
-
-	// Everything else must be escaped.
-	return true
-}
-
-func escape(s string, mode encoding) string {
-	spaceCount, hexCount := 0, 0
-	for i := 0; i < len(s); i++ {
-		c := s[i]
-		if shouldEscape(c, mode) {
-			if c == ' ' && mode == encodeQueryComponent {
-				spaceCount++
-			} else {
-				hexCount++
-			}
-		}
-	}
-
-	if spaceCount == 0 && hexCount == 0 {
-		return s
-	}
-
-	t := make([]byte, len(s)+2*hexCount)
-	j := 0
-	for i := 0; i < len(s); i++ {
-		switch c := s[i]; {
-		case c == ' ' && mode == encodeQueryComponent:
-			t[j] = '+'
-			j++
-		case shouldEscape(c, mode):
-			t[j] = '%'
-			t[j+1] = "0123456789ABCDEF"[c>>4]
-			t[j+2] = "0123456789ABCDEF"[c&15]
-			j += 3
-		default:
-			t[j] = s[i]
-			j++
-		}
-	}
-	return string(t)
-}
-
-// unescape unescapes a string; the mode specifies
-// which section of the URL string is being unescaped.
-func unescape(s string, mode encoding) (string, error) {
-	// Count %, check that they're well-formed.
-	n := 0
-	hasPlus := false
-	for i := 0; i < len(s); {
-		switch s[i] {
-		case '%':
-			n++
-			if i+2 >= len(s) || !ishex(s[i+1]) || !ishex(s[i+2]) {
-				s = s[i:]
-				if len(s) > 3 {
-					s = s[:3]
-				}
-				return "", EscapeError(s)
-			}
-			i += 3
-		case '+':
-			hasPlus = mode == encodeQueryComponent
-			i++
-		default:
-			i++
-		}
-	}
-
-	if n == 0 && !hasPlus {
-		return s, nil
-	}
-
-	t := make([]byte, len(s)-2*n)
-	j := 0
-	for i := 0; i < len(s); {
-		switch s[i] {
-		case '%':
-			t[j] = unhex(s[i+1])<<4 | unhex(s[i+2])
-			j++
-			i += 3
-		case '+':
-			if mode == encodeQueryComponent {
-				t[j] = ' '
-			} else {
-				t[j] = '+'
-			}
-			j++
-			i++
-		default:
-			t[j] = s[i]
-			j++
-			i++
-		}
-	}
-	return string(t), nil
-}
-
-func EncodeUriComponent(rawString string) string {
-	return escape(rawString, encodeFragment)
-}
-
-func DecodeUriCompontent(encoded string) (string, error) {
-	return unescape(encoded, encodeQueryComponent)
 }

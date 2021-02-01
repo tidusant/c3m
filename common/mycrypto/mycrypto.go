@@ -56,12 +56,6 @@ func Base64Decode(s string) string {
 	byteDecode, _ := base64.StdEncoding.DecodeString(Base64fix(s))
 	return string(byteDecode)
 }
-func CampaignDecode(data string) string {
-	code := data[:len(data)/2]
-	code = strings.Replace(data, code, "", 1) + code
-	strbytes, _ := base64.StdEncoding.DecodeString(Base64fix(code))
-	return string(strbytes)
-}
 
 //Encode: encoding data, if div=2: compress data to base64 before decode, else base64 data.
 // - Add a random string with x len (x random from 2 to 9) to data
