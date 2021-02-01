@@ -308,6 +308,10 @@ func DecompressFromBase64(in string) (string, error) {
 	if strings.Trim(in, " ") == "" {
 		return "", nil
 	}
+	//fix "+" character
+	in = strings.Replace(in, " ", "+", -1)
+	//log.Printf("last %d: %s",len(in) % 4,in[len(in)-(len(in)%4):])
+
 	switch len(in) % 4 { // To produce valid Base64
 
 	case 1:
