@@ -78,8 +78,9 @@
 </div>
 <div id="preloader" class="hidden preloader-inner"><div></div></div>
 
-{{customjs}}
+
 <script src="{{rootPath}}/scheme/dragula.min.js"></script>
+<script src="{{rootPath}}/scheme/lzstring.js"></script>
 <script>
     //==========modal script
 
@@ -109,12 +110,11 @@
             btnmodal.classList.add('hidden')
         });
     });
+
     document.querySelector("[lp-data-id=confirmMessage]").addEventListener('click', (e)=>{
         fnAfterConfirmModal()
         messageModal.classList.add('hidden')
     });
-
-
     function showMessage(title,message){
         var messageTitle=document.querySelector("#messageTitle")
         var messageContent=document.querySelector("#messageContent")
@@ -233,12 +233,11 @@
     function SubmitTest(){
         document.querySelector("#preloader").classList.remove("hidden")
         //remove all landingpage-trash
-        document.querySelectorAll(".landingpage-trash").forEach(item=>{
-            item.remove();
-        })
+        const content=LZString["compressToBase64"](document.querySelector("div[lp-data-id=landingpage-content]").innerHTML)
+
         fetch('{{rootPath}}/test/submit/{{submiturl}}', {
             method: 'POST',
-            body: "data=" + document.querySelector("div[lp-data-id=landingpage-content]").innerHTML,
+            body: "data=" +content,
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
             }
@@ -247,7 +246,7 @@
             try{
                 rs=JSON.parse(rs)
                 if(rs.status==1){
-                    window.location="{{rootPath}}/templates/{{templatename}}/out/"
+                    window.open("{{rootPath}}/templates/{{templatename}}/out/")
                 }else{
                     alert(rs.error)
                 }
@@ -260,6 +259,12 @@
             document.querySelector("#preloader").classList.add("hidden")
         })
 
+    }
+
+    function base64encode(input) {
+        return btoa( unescape( encodeURIComponent( input ) ) );
+        //return Buffer.from(unescape(encodeURIComponent(input))).toString('base64');
+        //return Buffer.from(input).toString('base64');
     }
 
     window.onload = function(e) {

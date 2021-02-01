@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/tidusant/c3m/common/c3mcommon"
+	"github.com/tidusant/c3m/common/mycrypto"
 	"io/ioutil"
 	"os"
 )
@@ -28,7 +29,12 @@ func SubmitTest(sex, tplname string, c *gin.Context) string {
 	}
 
 	//create content
-	err = ioutil.WriteFile(buildFolder+"/build/content.html", []byte(content), 0644)
+	htmlcontent, err := mycrypto.DecompressFromBase64(content)
+
+	if err != nil {
+		return err.Error()
+	}
+	err = ioutil.WriteFile(buildFolder+"/build/content.html", []byte(htmlcontent), 0644)
 	if err != nil {
 		return err.Error()
 	}
