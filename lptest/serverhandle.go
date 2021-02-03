@@ -41,6 +41,7 @@ func SubmitTest(sex, tplname string, c *gin.Context) string {
 
 	//call test server to purgecss and minify
 	bodystr := c3mcommon.RequestAPI2(lpminserver+"/purge", tplname, sex)
+
 	return bodystr
 
 }

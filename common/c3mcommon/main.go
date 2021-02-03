@@ -500,8 +500,9 @@ func ConnectDB(dbname string) (db *mgo.Database, strErr string) {
 	return db, strErr
 }
 func GetSpecialChar() string {
-	return `.*?/\n~!@#$%^&*(),.[];'<>"` + "`"
+	return `.*?/~!@#$%^&*(),.[];'{}<>:\"` + "`" + "\n\t "
 }
+
 func ReturnJsonMessage(status int, strerr, strmsg, data string) string {
 	if data == "" {
 		data = "{}"

@@ -78,9 +78,11 @@ func main() {
 
 func HandleTestRoute(c *gin.Context) {
 	//get cookie
+	var rs models.RequestResult
 	args := strings.Split(mycrypto.Decode(c.Param("params")), "|")
 	if len(args) < 2 {
-		c.Writer.WriteString("invalid url")
+		rs.Error = "invalid url"
+		dataReturn(c, rs)
 		return
 	}
 	sex := args[0]
@@ -88,30 +90,35 @@ func HandleTestRoute(c *gin.Context) {
 	log.Debugf("cookies: %+v", sex)
 	c.Writer.WriteHeader(http.StatusOK)
 	if sex == "" {
-		c.Writer.WriteString("Please login.")
+		rs.Error = "Please login."
+		dataReturn(c, rs)
 		return
 	}
 	//get session to auth
 	bodystr := c3mcommon.RequestAPI(apiserver, "aut", sex+"|t")
-	var rs models.RequestResult
+
 	err := json.Unmarshal([]byte(bodystr), &rs)
 
 	if err != nil {
-		c.Writer.WriteString(err.Error())
+		rs.Error = err.Error()
+		dataReturn(c, rs)
 		return
 	}
 	if rs.Status != 1 {
-		c.Writer.WriteString(rs.Error)
+		dataReturn(c, rs)
 		return
 	}
 	var rt map[string]string
 	err = json.Unmarshal([]byte(rs.Data), &rt)
 	if err != nil {
-		c.Writer.WriteString(err.Error())
+		rs.Error = err.Error()
+		dataReturn(c, rs)
 		return
 	}
 	if v, ok := rt["username"]; !ok || v == "" {
-		c.Writer.WriteString(`Please login again.`)
+
+		rs.Error = "Please login again."
+		dataReturn(c, rs)
 		return
 	}
 	//get modules permission from session
@@ -121,18 +128,33 @@ func HandleTestRoute(c *gin.Context) {
 	}
 	//check module permission
 	if ok, _ := modules["c3m-lptpl-admin"]; !ok {
-		c.Writer.WriteString(`Permission denied.`)
+
+		rs.Error = "Permission denied."
+		dataReturn(c, rs)
 		return
 	}
 
 	action := c.Param("action")
 	switch action {
 	case "edit":
+
 		c.Writer.WriteString(GetTest(sex, tplname, c))
 	case "submit":
 		c.Writer.WriteString(SubmitTest(sex, tplname, c))
 	}
+}
 
+func dataReturn(c *gin.Context, rs models.RequestResult) {
+	if c.Request.Method == "GET" {
+		if rs.Status == 1 {
+			c.Writer.WriteString(rs.Data)
+		} else {
+			c.Writer.WriteString(rs.Error)
+		}
+	} else {
+		b, _ := json.Marshal(rs)
+		c.Writer.WriteString(string(b))
+	}
 }
 
 func initdata() {
