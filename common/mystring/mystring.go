@@ -3,6 +3,7 @@ package mystring
 import (
 	"math/rand"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"unicode"
@@ -72,4 +73,12 @@ func HtmlUnEscape(content string) string {
 	t3, _ := url.QueryUnescape(t2)
 
 	return t3
+}
+
+func Alphabetnumeric(dat string) string {
+	reg, err := regexp.Compile("[^a-zA-Z0-9]+")
+	if err != nil {
+		return "abcdefghij"
+	}
+	return reg.ReplaceAllString(dat, "")
 }

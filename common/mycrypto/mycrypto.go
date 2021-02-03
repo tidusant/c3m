@@ -699,66 +699,102 @@ func Decode4(data string) string {
 	return data
 }
 
-//encode for wapi - not completed
-func EncodeW(data string) string {
+//encode for wapi
+func EncodeW(data, key string) string {
 	if data == "" {
 		return data
 	}
-	var x2 = base64.StdEncoding.EncodeToString([]byte(data))
+	key = strings.Trim(key, " ")
+	if len(key) < 2 {
+		key = "abc"
+	}
+	data += key
+	var x = NumRand(2, 9)
+	xstr := mystring.RandString(x)
+	data = base64.StdEncoding.EncodeToString([]byte(data))
+	data = strings.Replace(data, "=", "", -1)
+	data = xstr + data
+
+	data = CaesarCipher(data, len(key), 1)
+
+	var x2 = base64.StdEncoding.EncodeToString([]byte(strconv.Itoa(x)))
 	x2 = strings.Replace(x2, "=", "", -1)
-	return x2
+
+	data = data[:x] + xstr + data[x:]
+	data = data[:len(data)/2] + x2 + data[len(data)/2:]
+	return data
 }
 
 //decode for wapi - not completed
-func DecodeW(code string) string {
-	if code == "" {
-		return code
+func DecodeW(data, key string) string {
+	if data == "" {
+		return data
 	}
-	var rt string = ""
-	key := code
-	//key = "kZXUuYkRWzUgQk92YoNwRdh92Q3SZtFmb9Wa0NW"
-	if key == rt {
-		return rt
+	key = strings.Trim(key, " ")
+	if len(key) < 2 {
+		key = "abc"
+	}
+	ld := len(data)/2 - 1
+	var x2 = data[ld : ld+2]
+	data = data[:ld] + data[ld+2:]
+	xb, _ := base64.StdEncoding.DecodeString(Base64fix(x2))
+	x, _ := strconv.Atoi(string(xb))
+	data = data[:x] + data[2*x:]
+	data = CaesarCipher(data, len(key), -1)
+	data = data[x:]
+	b, _ := base64.StdEncoding.DecodeString(Base64fix(data))
+	data = strings.Replace(string(b), key, "", 1)
+	return data
+}
+
+func EncodeW2(data string, keysalt string) string {
+	if data == "" {
+		return data
+	}
+	//data = CompressToBase64(data)
+	if len(keysalt) < 2 {
+		keysalt = "xyz"
+	}
+	keysalt = "<<" + keysalt + ">>"
+	data = base64.StdEncoding.EncodeToString([]byte(data))
+	data = strings.Replace(data, "=", "", -1)
+	//log.Debugf("keysalt: %s", keysalt)
+	keysalt = base64.StdEncoding.EncodeToString([]byte(keysalt))
+	keysalt = strings.Replace(keysalt, "=", "", -1)
+	x := mystring.RandString(len(keysalt))
+	//log.Debugf("keysalt: %s", keysalt)
+	l := len(x)
+	if len(x) > len(data) {
+		l = len(data)
+	}
+	data = data[:l] + x + data[l:]
+	x2 := NumRand(0, len(data))
+	data = data[:x2] + keysalt + data[x2:]
+	//log.Println("strReturn: %s", data)
+	return data
+}
+
+func DecodeW2(data string, keysalt string) string {
+	if data == "" {
+		return data
+	}
+	if len(keysalt) < 2 {
+		keysalt = "xyz"
+	}
+	keysalt = "<<" + keysalt + ">>"
+	keysalt = base64.StdEncoding.EncodeToString([]byte(keysalt))
+	keysalt = strings.Replace(keysalt, "=", "", -1)
+	data = strings.Replace(data, keysalt, "", 1)
+	l := len(keysalt)
+	if l*2 > len(data) {
+		l = len(data) - l
 	}
 
-	oddstr := "d"
-	l := int(math.Floor((float64)(len(key)-2) / 2))
-	num := key[l : l+2]
+	data = data[:l] + data[l+len(keysalt):]
 
-	key = key[:l] + key[l+2:]
-
-	byteDecode, _ := base64.StdEncoding.DecodeString(Base64fix(num))
-	num = string(byteDecode)
-
-	floatNum, _ := strconv.ParseFloat(num, 64)
-	intNum := (int)(floatNum)
-	if intNum > 0 {
-		//print_r($num);print_r("\r\n");
-		//get odd string
-		lf := math.Ceil((float64)(len(key)) / floatNum)
-		oddstr = key[:int(lf)]
-		ukey := strings.Replace(key, oddstr, "", 1)
-		base64str := ""
-
-		for i := len(oddstr) - 1; i >= 0; i-- {
-			base64str += string(oddstr[len(oddstr)-1:])
-			oddstr = oddstr[:len(oddstr)-1]
-			if len(ukey)-intNum+1 > 0 {
-				base64str += mystring.Reverse(string(ukey[len(ukey)-intNum+1:]))
-			} else {
-				base64str += mystring.Reverse(ukey)
-			}
-			if i > 0 {
-				ukey = ukey[:len(ukey)-intNum+1]
-			}
-		}
-		base64str = base64str[:len(base64str)-intNum]
-
-		byteDecode, _ := base64.StdEncoding.DecodeString(base64str)
-		//byteDecode, _ := DecompressFromBase64(base64str)
-
-		rt = string(byteDecode)
-
-	}
-	return rt
+	data = Base64fix(data)
+	//byteDecode, _ := DecompressFromBase64(data)
+	byteDecode, _ := base64.StdEncoding.DecodeString(data)
+	data = string(byteDecode)
+	return data
 }
