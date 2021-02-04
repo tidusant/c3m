@@ -11,7 +11,7 @@ metadata:
   labels:
     app: c3m-lptest
 spec:
-  replicas: 3 #We always want more than 1 replica for HA test
+  replicas: 3 #We always want more than 1 replica for HA
   selector:
     matchLabels:
       app: c3m-lptest
