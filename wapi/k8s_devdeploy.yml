@@ -49,7 +49,7 @@ spec:
             - name: LP_IP
               value: "c3m-grpc-lp-service:8906"
             - name: SESSION_IP
-              value: "c3m-grpc-session-service:8864"
+              value: "c3m-grpc-wsession-service:8865"
               #value: "c3m-grpc-ord-service.colis-dev.svc.cluster.local"
 ---
 kind: Service
