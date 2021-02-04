@@ -24,7 +24,7 @@ spec:
         - name: c3m-grpc-wsession #1st container
           image: tidusant/c3m-grpc-wsession:latest #Dockerhub image
           ports:
-            - containerPort: 8864
+            - containerPort: 8865
           env:
             - name: CHADMIN_URI
               valueFrom:
@@ -50,5 +50,5 @@ spec:
   ports:
     - name: c3m-grpc-wsession-port
       protocol: TCP
-      port: 8864
-      nodePort: 30864 #must be between 30000 - 32767
+      port: 8865
+      nodePort: 30865 #must be between 30000 - 32767
