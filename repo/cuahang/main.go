@@ -2,10 +2,8 @@ package cuahang
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/tidusant/c3m/common/c3mcommon"
 	"github.com/tidusant/c3m/common/log"
-	"github.com/tidusant/c3m/repo/models"
 	"go.mongodb.org/mongo-driver/mongo"
 	"os"
 	"time"
@@ -37,20 +35,20 @@ func init() {
 }
 
 //==============slug=================
-func CreateBuild(object, objectid, data string, usex models.UserSession) string {
-	request := "createbuild|" + usex.Session
-	var bs models.BuildScript
-	bs.Object = object
-	bs.ObjectId = objectid
-	bs.Data = data
-	//bs.ShopConfigs = usex.Shop.Config
-	//bs.TemplateCode = usex.Shop.Theme
-	//bs.ShopId = usex.Shop.ID.Hex()
-	b, _ := json.Marshal(bs)
-	c3mcommon.RequestBuildServiceAsync(request, "POST", string(b))
-
-	return ""
-}
+//func CreateBuild(object, objectid, data string, usex models.UserSession) string {
+//	request := "createbuild|" + usex.Session
+//	var bs models.BuildScript
+//	bs.Object = object
+//	bs.ObjectId = objectid
+//	bs.Data = data
+//	//bs.ShopConfigs = usex.Shop.Config
+//	//bs.TemplateCode = usex.Shop.Theme
+//	//bs.ShopId = usex.Shop.ID.Hex()
+//	b, _ := json.Marshal(bs)
+//	c3mcommon.RequestBuildServiceAsync(request, "POST", string(b))
+//
+//	return ""
+//}
 
 //
 //func CreateCommonDataBuild(usex models.UserSession) string {

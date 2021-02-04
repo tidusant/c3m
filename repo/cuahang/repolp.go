@@ -69,17 +69,19 @@ func (r *Repo) SaveLP(lp models.LandingPage) bool {
 		//update
 		filter := bson.M{"campaignid": lp.CampaignID, "orgid": lp.OrgID}
 		update := bson.M{"$set": bson.M{
-			"path":         lp.Path,
-			"favicon":      lp.Favicon,
-			"content":      lp.Content,
-			"sfuserid":     lp.SFUserID,
-			"modified":     lp.Modified,
-			"lptemplateid": lp.LPTemplateID,
-			"customhost":   lp.CustomHost,
-			"domainname":   lp.DomainName,
-			"ftphost":      lp.FTPHost,
-			"ftpuser":      lp.FTPUser,
-			"ftppass":      lp.FTPPass,
+			"path":           lp.Path,
+			"favicon":        lp.Favicon,
+			"successmessage": lp.SuccessMessage,
+			"successtitle":   lp.SuccessTitle,
+			"content":        lp.Content,
+			"sfuserid":       lp.SFUserID,
+			"modified":       lp.Modified,
+			"lptemplateid":   lp.LPTemplateID,
+			"customhost":     lp.CustomHost,
+			"domainname":     lp.DomainName,
+			"ftphost":        lp.FTPHost,
+			"ftpuser":        lp.FTPUser,
+			"ftppass":        lp.FTPPass,
 		}}
 
 		_, err := col.UpdateOne(ctx, filter, update)
@@ -88,7 +90,6 @@ func (r *Repo) SaveLP(lp models.LandingPage) bool {
 			rs = false
 		}
 		r.QueryCount++
-		r.QueryTime += time.Since(start)
 	}
 	r.QueryTime += time.Since(start)
 	return rs

@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: colis-dev
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: c3m-grpc-wsession
+  namespace: colis-dev
+  labels:
+    app: c3m-grpc-wsession
+spec:
+  replicas: 1 #only 1 session to have session memory consistent t
+  selector:
+    matchLabels:
+      app: c3m-grpc-wsession
+  template:
+    metadata:
+      labels:
+        app: c3m-grpc-wsession
+    spec:
+      containers:
+        - name: c3m-grpc-wsession #1st container
+          image: tidusant/c3m-grpc-wsession:latest #Dockerhub image
+          ports:
+            - containerPort: 8864
+          env:
+            - name: CHADMIN_URI
+              valueFrom:
+                secretKeyRef:
+                  name: mysecret
+                  key: devdb_url
+            - name: CHADMIN_DB
+              valueFrom:
+                secretKeyRef:
+                  name: mysecret
+                  key: devdb_name
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: c3m-grpc-wsession-service
+  namespace: colis-dev
+spec:
+  type: NodePort
+  selector:
+    app: c3m-grpc-wsession
+  ports:
+    - name: c3m-grpc-wsession-port
+      protocol: TCP
+      port: 8864
+      nodePort: 30864 #must be between 30000 - 32767
