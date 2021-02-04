@@ -21,26 +21,41 @@ type LPTemplate struct {
 	Created     time.Time          `bson:"created"`
 	User        string             `bson:"user"`
 }
+type LPBuildData struct {
+	Session        string
+	LPPath         string
+	Favicon        string
+	CampID         string
+	OrgID          string
+	SuccessTitle   string
+	SuccessMessage string
+	ErrorTitle     string
+	ErrorMessage   string
+}
 type LandingPage struct {
-	ID           primitive.ObjectID `bson:"_id,omitempty"`
-	Path         string             `bson:"path"`
-	Favicon      string             `bson:"favicon"`
-	UserID       primitive.ObjectID `bson:"userid"`
-	LPTemplateID primitive.ObjectID `bson:"lptemplateid"`
-	CustomHost   bool               `bson:"customhost"`
-	DomainName   string             `bson:"domainname"`
-	FTPHost      string             `bson:"ftphost"`
-	FTPUser      string             `bson:"ftpuser"`
-	FTPPass      string             `bson:"ftppass"`
-	Content      string             `bson:"content"`
-	CampaignID   string             `bson:"campaignid"`
-	OrgID        string             `bson:"orgid"`
-	SFUserID     string             `bson:sfuserid`
-	Viewed       int                `bson:"viewed"`
-	Submitted    int                `bson:'submitted'`
-	Created      time.Time          `bson:"created"`
-	LastBuild    time.Time          `bson:"lastbuild"`
-	Modified     time.Time          `bson:"modified"`
+	ID             primitive.ObjectID `bson:"_id,omitempty"`
+	Path           string             `bson:"path"`
+	Favicon        string             `bson:"favicon"`
+	UserID         primitive.ObjectID `bson:"userid"`
+	LPTemplateID   primitive.ObjectID `bson:"lptemplateid"`
+	CustomHost     bool               `bson:"customhost"`
+	DomainName     string             `bson:"domainname"`
+	FTPHost        string             `bson:"ftphost"`
+	FTPUser        string             `bson:"ftpuser"`
+	FTPPass        string             `bson:"ftppass"`
+	Content        string             `bson:"content"`
+	CampaignID     string             `bson:"campaignid"`
+	OrgID          string             `bson:"orgid"`
+	SuccessTitle   string             `bson:"successtitle"`
+	SuccessMessage string             `bson:"successmessage"`
+	ErrorTitle     string             `bson:"errortitle"`
+	ErrorMessage   string             `bson:"errormessage"`
+	SFUserID       string             `bson:sfuserid`
+	Viewed         int                `bson:"viewed"`
+	Submitted      int                `bson:'submitted'`
+	Created        time.Time          `bson:"created"`
+	LastBuild      time.Time          `bson:"lastbuild"`
+	Modified       time.Time          `bson:"modified"`
 }
 type LPTPL4User struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
