@@ -13,8 +13,8 @@ func SubmitTest(sex, tplname string, c *gin.Context) string {
 
 	//build content for test
 	buildFolder := templateFolder + "/" + tplname
-	os.RemoveAll(buildFolder + "/build")
-	err := os.Mkdir(buildFolder+"/build", 0775)
+	os.RemoveAll(buildFolder + "/out")
+	err := os.Mkdir(buildFolder+"/out", 0755)
 	if err != nil {
 		return err.Error()
 	}
@@ -34,7 +34,7 @@ func SubmitTest(sex, tplname string, c *gin.Context) string {
 	if err != nil {
 		return err.Error()
 	}
-	err = ioutil.WriteFile(buildFolder+"/build/content.html", []byte(htmlcontent), 0644)
+	err = ioutil.WriteFile(buildFolder+"/out/content.html", []byte(htmlcontent), 0644)
 	if err != nil {
 		return err.Error()
 	}
