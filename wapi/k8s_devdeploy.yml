@@ -43,7 +43,7 @@ spec:
             - name: ORD_IP
               value: "c3m-grpc-ord-service:8903"
             - name: LPL_IP
-                value: "c3m-grpc-lplead-service:8907"
+              value: "c3m-grpc-lplead-service:8907"
             - name: SESSION_IP
               value: "c3m-grpc-wsession-service:8865"
               #value: "c3m-grpc-ord-service.colis-dev.svc.cluster.local"
