@@ -2,9 +2,11 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/tidusant/c3m/common/mycrypto"
+	"github.com/tidusant/c3m/repo/models"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -55,14 +57,20 @@ func doPOST(requeststring string, data string) (rs string, err error) {
 	return
 }
 
-func doCall(testname, requesturl, queryData string, t *testing.T) string {
+func doCall(testname, requesturl, queryData string, t *testing.T) models.RequestResult {
 	fmt.Println("\n\n==== " + testname + " ====")
 	fmt.Printf("Data: url: %s - data:%s\n", requesturl, queryData)
-	rs, err := doPOST(requesturl, queryData)
+	str, err := doPOST(requesturl, queryData)
 	if err != nil {
 		t.Fatalf("Test fail: request error: %s", err.Error())
 	}
+	var rs models.RequestResult
+	err = json.Unmarshal([]byte(str), &rs)
+	if err != nil {
+		t.Fatalf("Test fail: json parse error: %s", err.Error())
+	}
 	fmt.Printf("Request return: %+v\n", rs)
+
 	return rs
 }
 
@@ -84,14 +92,14 @@ func TestMain(m *testing.M) {
 func TestNoEncryptUrl(t *testing.T) {
 	rs := doCall("TestNoEncryptUrl", "test/edit/templatename", "", t)
 	//check test data
-	if rs != "invalid url" {
+	if rs.Error != "invalid url" {
 		t.Fatalf("Test fail")
 	}
 }
 func TestNoSession(t *testing.T) {
 	rs := doCall("TestNoSession", "test/edit/"+mycrypto.EncDat2("|template"), "", t)
 	//check test data
-	if rs != "Please login." {
+	if rs.Error != "Please login." {
 		t.Fatalf("Test fail")
 	}
 }
