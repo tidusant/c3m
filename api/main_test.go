@@ -91,10 +91,10 @@ func TestMain(m *testing.M) {
 }
 
 //test special char
-func TestSpecialChar(t *testing.T) {
-	rs := doCall("TestSpecialChar", c3mcommon.GetSpecialChar(), "", t)
+func TestSessionNotFound(t *testing.T) {
+	rs := doCall("TestSessionNotFound", c3mcommon.GetSpecialChar(), "", t)
 	//check test data
-	if rs.Status == 1 {
+	if rs.Status != -1 {
 		t.Fatalf("Test fail")
 	}
 }

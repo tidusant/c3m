@@ -57,6 +57,13 @@ func Base64Decode(s string) string {
 	return string(byteDecode)
 }
 
+func FillZero(s string, n int) string {
+	for i := len(s); i < n; i++ {
+		s = "0" + s
+	}
+	return s
+}
+
 //Encode: encoding data, if div=2: compress data to base64 before decode, else base64 data.
 // - Add a random string with x len (x random from 2 to 9) to data
 // - split data by x into 2 string and reverse 2 string and join into 1 string

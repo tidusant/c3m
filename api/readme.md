@@ -1,14 +1,11 @@
-#admin portal
-
-### how to build test
-```#bin/bash
-   env CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
-```
+#api for admin
 ### run in local:
-```#bin/bash
-cd colis/portals/admin
-
+```
 env SESSION_IP=127.0.0.1:8864 AUTH_IP=127.0.0.1:8901 SHOP_IP=127.0.0.1:8902 ORD_IP=127.0.0.1:8903 PAGE_IP=127.0.0.1:8904 LPTPL_IP=127.0.0.1:8905 LP_IP=127.0.0.1:8906 go run main.go session.go 
+```
+### test in local
+```
+env SESSION_IP=127.0.0.1:8864 AUTH_IP=127.0.0.1:8901 SHOP_IP=127.0.0.1:8902 ORD_IP=127.0.0.1:8903 PAGE_IP=127.0.0.1:8904 LPTPL_IP=127.0.0.1:8905 LP_IP=127.0.0.1:8906 go test
 ```
 ### build & run in docker:
 ```#bin/bash
