@@ -252,6 +252,10 @@ func (m *myRPC) SaveConfig() models.RequestResult {
 
 	}
 	oldlp.Favicon = lp.Favicon
+	oldlp.SuccessTitle = lp.SuccessTitle
+	oldlp.SuccessMessage = lp.SuccessMessage
+	oldlp.ErrorTitle = lp.ErrorTitle
+	oldlp.ErrorMessage = lp.ErrorMessage
 	oldlp.CustomHost = lp.CustomHost
 	oldlp.DomainName = lp.DomainName
 	oldlp.FTPHost = lp.FTPHost
@@ -295,7 +299,7 @@ func (m *myRPC) Publish() models.RequestResult {
 	}
 
 	//build content for publish
-	lppath := mycrypto.Decode4(lp.Path) //landingpage path: templates/xxx/
+	lppath := mycrypto.Decode4(lp.Path) //landingpage path: tplFolder/publish/pubFolder
 	argspath := strings.Split(lppath, "/")
 	if len(argspath) < 3 {
 		return models.RequestResult{Error: "landing page path invalid"}
@@ -317,8 +321,19 @@ func (m *myRPC) Publish() models.RequestResult {
 		return models.RequestResult{Error: err.Error()}
 	}
 	//call service publish
-
-	bodystr := c3mcommon.RequestAPI2(LPminserver+"/publish", argspath[0], m.Usex.Session+","+argspath[2]+","+mycrypto.Base64Encode(lp.Favicon))
+	buildData := models.LPBuildData{
+		Session:        m.Usex.Session,
+		LPPath:         argspath[2],
+		OrgID:          lp.OrgID,
+		CampID:         lp.CampaignID,
+		Favicon:        lp.Favicon,
+		SuccessTitle:   lp.SuccessTitle,
+		SuccessMessage: lp.SuccessMessage,
+		ErrorTitle:     lp.ErrorTitle,
+		ErrorMessage:   lp.ErrorMessage,
+	}
+	b, _ := json.Marshal(buildData)
+	bodystr := c3mcommon.RequestAPI2(LPminserver+"/publish", argspath[0], string(b))
 	log.Debugf("bodystr rt:%s", bodystr)
 	var rs models.RequestResult
 	err = json.Unmarshal([]byte(bodystr), &rs)

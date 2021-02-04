@@ -71,6 +71,8 @@ func (r *Repo) SaveLP(lp models.LandingPage) bool {
 		update := bson.M{"$set": bson.M{
 			"path":           lp.Path,
 			"favicon":        lp.Favicon,
+			"errormessage":   lp.ErrorMessage,
+			"errortitle":     lp.ErrorTitle,
 			"successmessage": lp.SuccessMessage,
 			"successtitle":   lp.SuccessTitle,
 			"content":        lp.Content,
