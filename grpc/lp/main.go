@@ -150,6 +150,10 @@ func (m *myRPC) SFLoadAll() models.RequestResult {
 			rt += fmt.Sprintf(`,"%s":{"CustomHost":%t,
 "DomainName":"%s",
 "Favicon":"%s",
+"SuccessTitle":"%s",
+"SuccessMessage":"%s",
+"ErrorTitle":"%s",
+"ErrorMessage":"%s",
 "FTPHost":"%s",
 "FTPUser":"%s",
 "LPTemplateID":"%s",
@@ -157,7 +161,7 @@ func (m *myRPC) SFLoadAll() models.RequestResult {
 "LastBuild":"%s",
 "Modified":"%s",
 "Submitted":%d,
-"Viewed":%d}`, v.CampaignID, v.CustomHost, v.DomainName, v.Favicon, v.FTPHost, v.FTPUser, v.LPTemplateID.Hex(), v.Created, v.LastBuild, v.Modified, v.Submitted, v.Viewed)
+"Viewed":%d}`, v.CampaignID, v.CustomHost, v.DomainName, v.Favicon, v.SuccessTitle, v.SuccessMessage, v.ErrorTitle, v.ErrorMessage, v.FTPHost, v.FTPUser, v.LPTemplateID.Hex(), v.Created, v.LastBuild, v.Modified, v.Submitted, v.Viewed)
 
 			//remove campid in campIdsWillRemove list
 			if ok, i := c3mcommon.InArray(v.CampaignID, campIdsWillRemove); ok {
