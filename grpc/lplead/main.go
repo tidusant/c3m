@@ -87,8 +87,14 @@ func (m *myRPC) SubmitLead() models.RequestResult {
 func (m *myRPC) LoadAllUnSync() models.RequestResult {
 	var rs []models.Lead
 	rs = m.Rpch.GetAllLeadByOrgID(m.Usex.Params)
-	rt := `[{}`
+	next := "0"
+	limit := 100
+	if len(rs) > limit {
+		next = "1"
+	}
+	rt := `{"next":` + next + `,"data":[{}`
 	if len(rs) > 0 {
+		count := 0
 		for _, v := range rs {
 			rt += fmt.Sprintf(`,{
 "Name":%s,
@@ -98,6 +104,10 @@ func (m *myRPC) LoadAllUnSync() models.RequestResult {
 "LeadSource":"Web",
 "Status":"Open - Not Contacted"}`,
 				v.Name, v.Email, v.Phone, v.Message)
+			count++
+			if count >= limit {
+				break
+			}
 		}
 	}
 	rt += `]`
