@@ -62,6 +62,7 @@ func connectGrpcs(ctx context.Context) {
 	grpcAddressMap["page"] = os.Getenv("PAGE_IP")
 	grpcAddressMap["lptpl"] = os.Getenv("LPTPL_IP")
 	grpcAddressMap["lp"] = os.Getenv("LP_IP")
+	grpcAddressMap["lpl"] = os.Getenv("LPL_IP")
 
 	//init grpc ssession
 	registerSessionGrpc(ctx, "ses")
