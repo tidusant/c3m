@@ -92,25 +92,27 @@ func (m *myRPC) LoadAllUnSync() models.RequestResult {
 	if len(rs) > limit {
 		next = "1"
 	}
-	rt := `{"next":` + next + `,"data":[{}`
+	rt := `{"next":` + next + `,"data":[`
 	if len(rs) > 0 {
 		count := 0
 		for _, v := range rs {
-			rt += fmt.Sprintf(`,{
+			rt += fmt.Sprintf(`{
 "Name":%s,
 "Email":"%s",
 "Phone":"%s",
 "Description":"%s",
 "LeadSource":"Web",
-"Status":"Open - Not Contacted"}`,
+"Status":"Open - Not Contacted"},`,
 				v.Name, v.Email, v.Phone, v.Message)
 			count++
 			if count >= limit {
 				break
 			}
 		}
+		//remove last comma
+		rt = rt[:len(rt)-1]
 	}
-	rt += `]`
+	rt += `]}`
 
 	return models.RequestResult{Status: 1, Data: rt}
 }
