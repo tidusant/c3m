@@ -97,7 +97,7 @@ func (m *myRPC) LoadAllUnSync() models.RequestResult {
 		count := 0
 		for _, v := range rs {
 			rt += fmt.Sprintf(`{
-"Name":%s,
+"Name":"%s",
 "Email":"%s",
 "Phone":"%s",
 "Description":"%s",
