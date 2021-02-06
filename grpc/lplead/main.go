@@ -56,6 +56,8 @@ func (s *service) Call(ctx context.Context, in *pb.RPCRequest) (rt *pb.RPCRespon
 	if rs.Error == "" {
 		if m.Usex.Action == "s" {
 			rs = m.SubmitLead()
+		} else if m.Usex.Action == "laus" {
+			rs = m.LoadAllUnSync()
 		} else {
 			//unknow action
 			rt = m.ReturnNilRespone()
@@ -80,6 +82,27 @@ func (m *myRPC) SubmitLead() models.RequestResult {
 		return models.RequestResult{Error: "Could not save lead"}
 	}
 	return models.RequestResult{Status: 1, Data: ""}
+}
+
+func (m *myRPC) LoadAllUnSync() models.RequestResult {
+	var rs []models.Lead
+	rs = m.Rpch.GetAllLeadByOrgID(m.Usex.Params)
+	rt := `[{}`
+	if len(rs) > 0 {
+		for _, v := range rs {
+			rt += fmt.Sprintf(`,{
+"Name":%s,
+"Email":"%s",
+"Phone":"%s",
+"Description":"%s",
+"LeadSource":"Web",
+"Status":"Open - Not Contacted"}`,
+				v.Name, v.Email, v.Phone, v.Message)
+		}
+	}
+	rt += `]`
+
+	return models.RequestResult{Status: 1, Data: rt}
 }
 
 func main() {

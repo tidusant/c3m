@@ -38,3 +38,16 @@ func (r *Repo) SaveLead(ld models.Lead) bool {
 	r.QueryTime += time.Since(start)
 	return rs
 }
+func (r *Repo) GetAllLeadByOrgID(orgID string) []models.Lead {
+	start := time.Now()
+	col := db.Collection("lpleads")
+	var rs []models.Lead
+	cond := bson.M{"orgid": orgID, "status": 0}
+	cursor, err := col.Find(ctx, cond)
+	r.QueryCount++
+	if err = cursor.All(ctx, &rs); err != nil {
+		c3mcommon.CheckError("GetAllLeadByOrgID ", err)
+	}
+	r.QueryTime += time.Since(start)
+	return rs
+}
