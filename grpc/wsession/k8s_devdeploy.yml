@@ -44,11 +44,11 @@ metadata:
   name: c3m-grpc-wsession-service
   namespace: colis-dev
 spec:
-  type: NodePort
+  #type: NodePort
   selector:
     app: c3m-grpc-wsession
   ports:
-    - name: c3m-grpc-wsession-port
+    - name: grpc
       protocol: TCP
       port: 8865
-      nodePort: 30865 #must be between 30000 - 32767
+      #nodePort: 30865 #must be between 30000 - 32767
