@@ -54,11 +54,11 @@ metadata:
   name: c3m-wapi-service
   namespace: colis-dev
 spec:
-  type: NodePort
+  #type: NodePort
   selector:
     app: c3m-wapi
   ports:
-    - name: c3m-wapi-port
-      protocol: TCP
+    - name: http
+      #protocol: TCP
       port: 8083
-      nodePort: 30083 #must be between 30000 - 32767
+      #nodePort: 30083 #must be between 30000 - 32767
