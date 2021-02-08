@@ -57,11 +57,11 @@ metadata:
   name: c3m-grpc-lptpl-service
   namespace: colis-dev
 spec:
-  type: NodePort
+  #type: NodePort
   selector:
     app: c3m-grpc-lptpl
   ports:
-    - name: c3m-grpc-lptpl-port
+    - name: grpc
       protocol: TCP
       port: 8905
-      nodePort: 30905 #must be between 30000 - 32767
+      #nodePort: 30905 #must be between 30000 - 32767
