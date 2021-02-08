@@ -46,11 +46,11 @@ metadata:
   name: c3m-lptest-service
   namespace: colis-dev
 spec:
-  type: NodePort
+  #type: NodePort
   selector:
     app: c3m-lptest
   ports:
-    - name: c3m-lptest-port
-      protocol: TCP
+    - name: http
+      #protocol: TCP
       port: 8082
-      nodePort: 30082 #must be between 30000 - 32767
+      #nodePort: 30082 #must be between 30000 - 32767
