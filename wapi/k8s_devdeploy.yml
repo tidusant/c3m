@@ -23,6 +23,7 @@ spec:
       containers:
         - name: c3m-wapi #1st container
           image: tidusant/c3m-wapi:latest #Dockerhub image
+          imagePullPolicy: Always
           ports:
             - containerPort: 8083 #Exposes the port 8901 of the container
           env:
