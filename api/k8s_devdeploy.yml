@@ -150,11 +150,11 @@ metadata:
   name: c3m-api-service
   namespace: colis-dev
 spec:
-  type: NodePort
+  #type: NodePort
   selector:
     app: c3m-api
   ports:
-    - name: c3m-api-port
-      protocol: TCP
+    - name: http
+      #protocol: TCP
       port: 8081
-      nodePort: 30081 #must be between 30000 - 32767
+      #nodePort: 30081 #must be between 30000 - 32767
