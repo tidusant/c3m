@@ -12,6 +12,12 @@ metadata:
     app: c3m-wapi
 spec:
   replicas: 3 #We always want more than 1 replica for HA test
+  progressDeadlineSeconds: 30
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   selector:
     matchLabels:
       app: c3m-wapi
