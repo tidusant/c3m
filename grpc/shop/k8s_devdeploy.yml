@@ -44,11 +44,11 @@ metadata:
   name: c3m-grpc-shop-service
   namespace: colis-dev
 spec:
-  type: NodePort
+  #type: NodePort
   selector:
     app: c3m-grpc-shop
   ports:
-    - name: c3m-grpc-shop-port
+    - name: grpc
       protocol: TCP
       port: 8902
-      nodePort: 30902 #must be between 30000 - 32767
+      #nodePort: 30902 #must be between 30000 - 32767
